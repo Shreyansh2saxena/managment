@@ -5,6 +5,7 @@ import { Edit, Delete } from "@mui/icons-material";
 const ViewEmployee = () => {
   const [employees, setEmployees] = useState([]);
   const [searchId, setSearchId] = useState("");
+  const [filterFields, setFilterFields] = useState([]);
   const [editEmployee, setEditEmployee] = useState(null);
 
   useEffect(() => {
@@ -58,6 +59,15 @@ const ViewEmployee = () => {
     }
   };
 
+  const handleFilterChange = (e) => {
+    const value = e.target.value;
+    setFilterFields(
+      filterFields.includes(value)
+        ? filterFields.filter((field) => field !== value)
+        : [...filterFields, value]
+    );
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-5xl bg-white shadow-lg rounded-lg p-6">
@@ -65,14 +75,30 @@ const ViewEmployee = () => {
           Employee List
         </h2>
 
-        {/* Search Bar */}
-        <input
-          type="text"
-          placeholder="Search by Employee ID"
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          className="w-full p-2 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        {/* Search and Filter Bar */}
+        <div className="flex space-x-4 mb-4">
+          <input
+            type="text"
+            placeholder="Search by Employee ID"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            className="w-1/2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+          <div className="w-1/2 flex flex-wrap space-x-2">
+            {["role", "email", "phone", "address"].map((field) => (
+              <label key={field} className="flex items-center space-x-1">
+                <input
+                  type="checkbox"
+                  value={field}
+                  checked={filterFields.includes(field)}
+                  onChange={handleFilterChange}
+                  className="mr-1"
+                />
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </label>
+            ))}
+          </div>
+        </div>
 
         {/* Employee Table */}
         <div className="overflow-x-auto">
@@ -81,10 +107,10 @@ const ViewEmployee = () => {
               <tr>
                 <th className="p-3">ID</th>
                 <th className="p-3">Name</th>
-                <th className="p-3">Address</th>
-                <th className="p-3">Phone</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Role</th>
+                {filterFields.includes("address") && <th className="p-3">Address</th>}
+                {filterFields.includes("phone") && <th className="p-3">Phone</th>}
+                {filterFields.includes("email") && <th className="p-3">Email</th>}
+                {filterFields.includes("role") && <th className="p-3">Role</th>}
                 <th className="p-3">Actions</th>
               </tr>
             </thead>
@@ -93,10 +119,10 @@ const ViewEmployee = () => {
                 <tr key={employee.employeeId} className="border-t">
                   <td className="p-3">{employee.employeeId}</td>
                   <td className="p-3">{employee.employeeName}</td>
-                  <td className="p-3">{employee.address}</td>
-                  <td className="p-3">{employee.phone}</td>
-                  <td className="p-3">{employee.email}</td>
-                  <td className="p-3">{employee.role}</td>
+                  {filterFields.includes("address") && <td className="p-3">{employee.address}</td>}
+                  {filterFields.includes("phone") && <td className="p-3">{employee.phone}</td>}
+                  {filterFields.includes("email") && <td className="p-3">{employee.email}</td>}
+                  {filterFields.includes("role") && <td className="p-3">{employee.role}</td>}
                   <td className="p-3 flex justify-center space-x-2">
                     <button
                       onClick={() => handleEditClick(employee)}
@@ -116,70 +142,6 @@ const ViewEmployee = () => {
             </tbody>
           </table>
         </div>
-
-        {/* Edit Employee Modal */}
-        {editEmployee && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md">
-              <h3 className="text-xl font-semibold mb-4">Edit Employee</h3>
-              <input
-                type="text"
-                name="employeeName"
-                value={editEmployee.employeeName}
-                onChange={handleEditChange}
-                className="w-full p-2 border rounded-lg mb-2"
-                placeholder="Name"
-              />
-              <input
-                type="text"
-                name="address"
-                value={editEmployee.address}
-                onChange={handleEditChange}
-                className="w-full p-2 border rounded-lg mb-2"
-                placeholder="Address"
-              />
-              <input
-                type="tel"
-                name="phone"
-                value={editEmployee.phone}
-                onChange={handleEditChange}
-                className="w-full p-2 border rounded-lg mb-2"
-                placeholder="Phone"
-              />
-              <input
-                type="email"
-                name="email"
-                value={editEmployee.email}
-                onChange={handleEditChange}
-                className="w-full p-2 border rounded-lg mb-2"
-                placeholder="Email"
-              />
-              <select
-                name="role"
-                value={editEmployee.role}
-                onChange={handleEditChange}
-                className="w-full p-2 border rounded-lg mb-4"
-              >
-                <option value="Admin">Admin</option>
-                <option value="Employee">Employee</option>
-              </select>
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => setEditEmployee(null)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleUpdateEmployee}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Update
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

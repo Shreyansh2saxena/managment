@@ -19,11 +19,7 @@ const Dashboard = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
-      if (window.innerWidth <= 768) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
+      setIsSidebarOpen(window.innerWidth > 768);
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -50,19 +46,14 @@ const Dashboard = () => {
   return (
     <Router>
       <div className="h-screen flex flex-col">
-        {/* Navbar with dropdown menu for mobile */}
         <Navbar
           onNavClick={handleNavClick}
           toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           isMobile={isMobile}
           sidebarItems={sidebarItems}
         />
-
         <div className="flex flex-1">
-          {/* Sidebar only visible on larger screens */}
           {!isMobile && isSidebarOpen && <Sidebar sidebarItems={sidebarItems} />}
-
-          {/* Main Content */}
           <div className="flex-1 p-6 overflow-y-auto">
             <Routes>
               <Route path="/" element={<Home />} />

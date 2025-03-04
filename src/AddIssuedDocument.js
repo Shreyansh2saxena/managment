@@ -39,7 +39,7 @@ const AddIssuedDoc = () => {
     formDataObj.append("file", formData.file);
 
     try {
-      await axios.post("/api/issued-docs", formDataObj, {
+      await axios.post("http://localhost:8080/api/issued-docs", formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setMessage("Document added successfully!");

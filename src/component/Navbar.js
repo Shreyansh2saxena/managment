@@ -13,15 +13,15 @@ const Navbar = ({ onNavClick, toggleSidebar }) => {
         <Link to="/" className="px-4 hover:text-gray-300" onClick={() => onNavClick("Home")}>
           Home
         </Link>
-        <button className="px-4 hover:text-gray-300" onClick={() => onNavClick("Employees")}>
+        <Link to='/' className="px-4 hover:text-gray-300" onClick={() => onNavClick("Employees")}>
           Employees
-        </button>
-        <button className="px-4 hover:text-gray-300" onClick={() => onNavClick("Documents")}>
+        </Link>
+        <Link to="/" className="px-4 hover:text-gray-300" onClick={() => onNavClick("Documents")}>
           Documents
-        </button>
-        <button className="px-4 hover:text-gray-300" onClick={() => onNavClick("Issued Documents")}>
+        </Link>
+        <Link to="/" className="px-4 hover:text-gray-300" onClick={() => onNavClick("Issued Documents")}>
           Issued Documents
-        </button>
+        </Link>
       </div>
     </nav>
   );

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 const Sidebar = ({ sidebarItems }) => {
+  
   return (
     <div className="w-64 bg-gray-100 p-4 min-h-screen shadow-md hidden md:block">
       {sidebarItems.length > 0 && (
