@@ -68,6 +68,30 @@ const ViewEmployee = () => {
     );
   };
 
+  const handleDownload = () => {
+    const csvRows = [];
+    const headers = ["ID", "Name", ...filterFields];
+    csvRows.push(headers.join(","));
+    
+    filteredEmployees.forEach((employee) => {
+      const row = [
+        employee.employeeId,
+        employee.employeeName,
+        ...filterFields.map((field) => employee[field] || "")
+      ];
+      csvRows.push(row.join(","));
+    });
+    
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "employees.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-100 p-4">
       <div className="w-full max-w-5xl bg-white shadow-lg rounded-lg p-6">
@@ -76,15 +100,15 @@ const ViewEmployee = () => {
         </h2>
 
         {/* Search and Filter Bar */}
-        <div className="flex space-x-4 mb-4">
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mb-4">
           <input
             type="text"
             placeholder="Search by Employee ID"
             value={searchId}
             onChange={(e) => setSearchId(e.target.value)}
-            className="w-1/2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full md:w-1/2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          <div className="w-1/2 flex flex-wrap space-x-2">
+          <div className="w-full md:w-1/2 flex flex-wrap space-x-2">
             {["role", "email", "phone", "address"].map((field) => (
               <label key={field} className="flex items-center space-x-1">
                 <input
@@ -100,9 +124,17 @@ const ViewEmployee = () => {
           </div>
         </div>
 
+        {/* Download Button */}
+        <button
+          onClick={handleDownload}
+          className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Download Data
+        </button>
+
         {/* Employee Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
+          <table className="min-w-full bg-white border rounded-lg text-sm">
             <thead className="bg-blue-600 text-white">
               <tr>
                 <th className="p-3">ID</th>
@@ -124,12 +156,6 @@ const ViewEmployee = () => {
                   {filterFields.includes("email") && <td className="p-3">{employee.email}</td>}
                   {filterFields.includes("role") && <td className="p-3">{employee.role}</td>}
                   <td className="p-3 flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleEditClick(employee)}
-                      className="p-1 text-blue-500 hover:text-blue-700"
-                    >
-                      <Edit />
-                    </button>
                     <button
                       onClick={() => handleDelete(employee.employeeId)}
                       className="p-1 text-red-500 hover:text-red-700"

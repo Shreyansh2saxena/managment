@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Visibility, SaveAlt } from "@mui/icons-material";
+import { Visibility, SaveAlt, Edit } from "@mui/icons-material";
 import axios from "axios";
 
 const ViewIssuedDocs = () => {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState({ employeeId: "", typeOfDoc: "" });
+  const [suggestions, setSuggestions] = useState([]);
+  const [editDoc, setEditDoc] = useState(null);
 
   useEffect(() => {
     axios
-      .get("/api/issued-docs")
+      .get("http://localhost:8080/api/issued-docs")
       .then((response) => {
         setDocs(response.data);
         setLoading(false);
@@ -19,6 +21,45 @@ const ViewIssuedDocs = () => {
         setLoading(false);
       });
   }, []);
+
+  const handleSearchChange = async (e) => {
+    const value = e.target.value;
+    setSearch({ ...search, employeeId: value });
+    if (value) {
+      try {
+        const response = await axios.get(`/api/employees/suggestions?query=${value}`);
+        setSuggestions(response.data);
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      }
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleEditClick = (doc) => {
+    setEditDoc({ ...doc });
+  };
+
+  const handleEditChange = (e) => {
+    setEditDoc({ ...editDoc, [e.target.name]: e.target.value });
+  };
+
+  const handleUpdateDoc = async () => {
+    try {
+      await axios.put(`http://localhost:8080/api/documents
+      // /${editDoc.id}`, editDoc);
+      alert("Document updated successfully!");
+      setEditDoc(null);
+      setLoading(true);
+      axios.get("/api/issued-docs").then((response) => {
+        setDocs(response.data);
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error("Error updating document:", error);
+    }
+  };
 
   const filteredDocs = docs.filter(
     (doc) =>
@@ -34,14 +75,29 @@ const ViewIssuedDocs = () => {
         </h2>
 
         {/* Search Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Search by Employee ID"
-            value={search.employeeId}
-            onChange={(e) => setSearch({ ...search, employeeId: e.target.value })}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by Employee ID"
+              value={search.employeeId}
+              onChange={handleSearchChange}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {suggestions.length > 0 && (
+              <ul className="absolute z-10 bg-white border rounded-lg w-full shadow-lg">
+                {suggestions.map((suggestion) => (
+                  <li
+                    key={suggestion.id}
+                    onClick={() => setSearch({ ...search, employeeId: suggestion.employeeId })}
+                    className="p-2 cursor-pointer hover:bg-gray-200"
+                  >
+                    {suggestion.employeeId} - {suggestion.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <input
             type="text"
             placeholder="Search by Document Type"
@@ -76,24 +132,32 @@ const ViewIssuedDocs = () => {
                     <td className="p-3">{doc.dateOfIssue}</td>
                     <td className="p-3 flex justify-center space-x-2">
                       <button
-                        onClick={() => window.open(`/api/issued-docs/view/${doc.id}`, "_blank")}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg flex items-center space-x-1 hover:bg-blue-600"
+                        onClick={() => handleEditClick(doc)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg flex items-center space-x-1 hover:bg-yellow-600"
                       >
-                        <Visibility fontSize="small" />
-                        <span>View</span>
-                      </button>
-                      <button
-                        onClick={() => window.open(`/api/issued-docs/download/${doc.id}`, "_blank")}
-                        className="px-3 py-1 bg-green-500 text-white rounded-lg flex items-center space-x-1 hover:bg-green-600"
-                      >
-                        <SaveAlt fontSize="small" />
-                        <span>Download</span>
+                        <Edit fontSize="small" />
+                        <span>Edit</span>
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {editDoc && (
+          <div className="mt-6 p-4 border rounded-lg bg-gray-200">
+            <h3 className="text-xl font-bold mb-2">Edit Document</h3>
+            <input
+              type="text"
+              name="typeOfDoc"
+              value={editDoc.typeOfDoc}
+              onChange={handleEditChange}
+              className="p-2 border rounded-lg w-full mb-2"
+              placeholder="Document Type"
+            />
+            <button onClick={handleUpdateDoc} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mr-2">Update</button>
           </div>
         )}
       </div>
