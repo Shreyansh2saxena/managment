@@ -26,22 +26,34 @@ const AddIssuedDoc = () => {
     setFileName(file ? file.name : "");
   };
 
-  // Handle form submission
+  // Handle form submission with employee ID validation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const formDataObj = new FormData();
-    formDataObj.append("employeeId", formData.employeeId);
-    formDataObj.append("typeOfDoc", formData.typeOfDoc);
-    formDataObj.append("issuedBy", formData.issuedBy);
-    formDataObj.append("file", formData.file);
-
     try {
+      // Check if the employee ID exists
+      const response = await axios.get(
+        `http://localhost:8080/api/employees/${formData.employeeId}`
+      );
+
+      if (!response.data) {
+        setMessage("Employee ID not found!");
+        setLoading(false);
+        return;
+      }
+
+      const formDataObj = new FormData();
+      formDataObj.append("employeeId", formData.employeeId);
+      formDataObj.append("typeOfDoc", formData.typeOfDoc);
+      formDataObj.append("issuedBy", formData.issuedBy);
+      formDataObj.append("file", formData.file);
+
       await axios.post("http://localhost:8080/api/issued-docs", formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+
       setMessage("Document added successfully!");
       setFormData({ employeeId: "", typeOfDoc: "", issuedBy: "", file: null });
       setFileName("");
@@ -60,7 +72,9 @@ const AddIssuedDoc = () => {
       {message && (
         <p
           className={`text-center font-medium mb-4 ${
-            message.includes("Error") ? "text-red-500" : "text-green-500"
+            message.includes("Error") || message.includes("not found")
+              ? "text-red-500"
+              : "text-green-500"
           }`}
         >
           {message}
