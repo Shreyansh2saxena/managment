@@ -5,9 +5,10 @@ import axios from "axios";
 const ViewIssuedDocs = () => {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState({ employeeId: "", typeOfDoc: "" });
-  const [suggestions, setSuggestions] = useState([]);
+  const [searchEmployeeId, setSearchEmployeeId] = useState("");
+  const [searchDocType, setSearchDocType] = useState("");
 
+  // Fetch documents
   useEffect(() => {
     axios
       .get("http://localhost:8080/api/issued-docs")
@@ -21,42 +22,46 @@ const ViewIssuedDocs = () => {
       });
   }, []);
 
-  const handleSearchChange = async (e) => {
-    const value = e.target.value;
-    setSearch({ ...search, employeeId: value });
-    if (value) {
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/api/employees/suggestions?query=${value}`
-        );
-        setSuggestions(response.data);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-      }
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  const handleDelete = async (docId) => {
+  // Delete Document
+  const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/issued-docs/${docId}`);
-        setDocs(docs.filter((doc) => doc.id !== docId));
+        await axios.delete(`http://localhost:8080/api/issued-docs/${id}`);
+        setDocs((prevDocs) => prevDocs.filter((doc) => doc.id !== id));
         alert("Document deleted successfully!");
       } catch (error) {
         console.error("Error deleting document:", error);
+        alert("Failed to delete document.");
       }
     }
   };
 
+  // View Document using Blob
+  const handleView = async (doc) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/issued-docs/view/${doc.id}`,
+        { responseType: "blob" }
+      );
+      const fileBlob = new Blob([response.data], { type: "application/pdf" });
+      const fileURL = window.URL.createObjectURL(fileBlob);
+      window.open(fileURL, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(fileURL), 10000);
+    } catch (error) {
+      console.error("Error viewing document:", error);
+      alert("Failed to view document.");
+    }
+  };
 
-
-
+  // Filtered Documents
   const filteredDocs = docs.filter(
     (doc) =>
-      doc.employeeId.toString().includes(search.employeeId) &&
-      doc.typeOfDoc.toLowerCase().includes(search.typeOfDoc.toLowerCase())
+      (searchEmployeeId
+        ? doc.employeeId.toString().includes(searchEmployeeId)
+        : true) &&
+      (searchDocType
+        ? doc.typeOfDoc.toLowerCase().includes(searchDocType.toLowerCase())
+        : true)
   );
 
   return (
@@ -67,40 +72,24 @@ const ViewIssuedDocs = () => {
         </h2>
 
         {/* Search Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by Employee ID"
-              value={search.employeeId}
-              onChange={handleSearchChange}
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            {suggestions.length > 0 && (
-              <ul className="absolute z-10 bg-white border rounded-lg w-full shadow-lg">
-                {suggestions.map((suggestion) => (
-                  <li
-                    key={suggestion.id}
-                    onClick={() =>
-                      setSearch({ ...search, employeeId: suggestion.employeeId })
-                    }
-                    className="p-2 cursor-pointer hover:bg-gray-200"
-                  >
-                    {suggestion.employeeId} - {suggestion.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <input
+            type="text"
+            placeholder="Search by Employee ID"
+            value={searchEmployeeId}
+            onChange={(e) => setSearchEmployeeId(e.target.value)}
+            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
           <input
             type="text"
             placeholder="Search by Document Type"
-            value={search.typeOfDoc}
-            onChange={(e) => setSearch({ ...search, typeOfDoc: e.target.value })}
+            value={searchDocType}
+            onChange={(e) => setSearchDocType(e.target.value)}
             className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
 
+        {/* Loading Indicator */}
         {loading ? (
           <div className="flex justify-center items-center py-4">
             <div className="h-10 w-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
@@ -118,31 +107,36 @@ const ViewIssuedDocs = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredDocs.map((doc) => (
-                  <tr key={doc.id} className="border-t">
-                    <td className="p-3">{doc.employeeId}</td>
-                    <td className="p-3">{doc.typeOfDoc}</td>
-                    <td className="p-3">{doc.issuedBy}</td>
-                    <td className="p-3">{doc.dateOfIssue}</td>
-                    <td className="p-3 flex justify-center space-x-2">
-                      <button
-                        onClick={() => window.open(`http://localhost:8080/api/issued-docs/view/${doc.id}`, "_blank")}
-                        className="px-3 py-1 bg-blue-500 text-white rounded-lg flex items-center space-x-1 hover:bg-blue-600"
-                      >
-                        <Visibility fontSize="small" />
-                       
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(doc.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg flex items-center space-x-1 hover:bg-red-600"
-                      >
-                        <Delete fontSize="small" />
-                        
-                      </button>
+                {filteredDocs.length > 0 ? (
+                  filteredDocs.map((doc) => (
+                    <tr key={doc.id} className="border-t">
+                      <td className="p-3">{doc.employeeId}</td>
+                      <td className="p-3">{doc.typeOfDoc}</td>
+                      <td className="p-3">{doc.issuedBy}</td>
+                      <td className="p-3">{doc.dateOfIssue}</td>
+                      <td className="p-3 flex justify-center space-x-2">
+                        <button
+                          onClick={() => handleView(doc)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded-lg flex items-center space-x-1 hover:bg-blue-600"
+                        >
+                          <Visibility fontSize="small" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-lg flex items-center space-x-1 hover:bg-red-600"
+                        >
+                          <Delete fontSize="small" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="p-4 text-center text-gray-500">
+                      No records found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
