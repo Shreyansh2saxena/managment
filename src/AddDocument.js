@@ -1,18 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const AddDocumentForm = () => {
+  const [employeeName, setEmployeeName] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [typeOfDoc, setTypeOfDoc] = useState("");
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
 
-  // Handle File Selection
+  const [employeeList, setEmployeeList] = useState([]); // Store fetched employees
+  const [filteredEmployees, setFilteredEmployees] = useState([]); // Suggestions
+
+  // Fetch all employees when the component mounts
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/api/employees");
+        setEmployeeList(response.data);
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  // Handle employee name input change
+  const handleEmployeeNameChange = (e) => {
+    const input = e.target.value;
+    setEmployeeName(input);
+
+    // Filter employees based on input
+    if (input.length > 0) {
+      const filtered = employeeList.filter((emp) =>
+        emp.employeeName.toLowerCase().includes(input.toLowerCase())
+      );
+      setFilteredEmployees(filtered);
+    } else {
+      setFilteredEmployees([]);
+    }
+  };
+
+  // Handle selecting an employee from suggestions
+  const handleSelectEmployee = (employee) => {
+    setEmployeeName(employee.employeeName);
+    setEmployeeId(employee.employeeId);
+    setFilteredEmployees([]); // Hide suggestions after selection
+  };
+
+  // Handle file selection
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  // Handle Form Submission
+  // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -22,6 +62,7 @@ const AddDocumentForm = () => {
     }
 
     const formData = new FormData();
+    formData.append("employeeName", employeeName);
     formData.append("employeeId", employeeId);
     formData.append("typeOfDoc", typeOfDoc);
     formData.append("file", file);
@@ -33,11 +74,12 @@ const AddDocumentForm = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       setMessage("Document uploaded successfully.");
+      setEmployeeName("");
       setEmployeeId("");
       setTypeOfDoc("");
       setFile(null);
     } catch (error) {
-      setMessage("Enter a valid Employee Id.");
+      setMessage("Enter a valid Employee ID.");
     }
   };
 
@@ -45,14 +87,44 @@ const AddDocumentForm = () => {
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-lg w-full sm:w-3/4 md:w-2/3 lg:w-1/2 xl:w-1/3">
       <h2 className="text-xl font-semibold mb-4 text-center text-blue-600">Upload Document</h2>
       <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
+        
+        {/* Employee Name Input with Live Suggestions */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Employee Name"
+            value={employeeName}
+            onChange={handleEmployeeNameChange}
+            className="p-2 border border-gray-300 rounded-md w-full"
+          />
+          
+          {/* Display Suggestions */}
+          {filteredEmployees.length > 0 && (
+            <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full shadow-md">
+              {filteredEmployees.map((emp) => (
+                <li
+                  key={emp.employeeId}
+                  className="p-2 cursor-pointer hover:bg-gray-200 flex justify-between"
+                  onClick={() => handleSelectEmployee(emp)}
+                >
+                  <span>{emp.employeeName}</span>
+                  <span className="text-gray-500">({emp.employeeId})</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Employee ID (Auto-filled) */}
         <input
           type="number"
           placeholder="Employee ID"
           value={employeeId}
-          onChange={(e) => setEmployeeId(e.target.value)}
-          className="p-2 border border-gray-300 rounded-md w-full"
+          readOnly // Make it read-only since it auto-fills
+          className="p-2 border border-gray-300 rounded-md w-full bg-gray-100"
         />
 
+        {/* Document Type Input */}
         <input
           type="text"
           placeholder="Document Type"
@@ -62,9 +134,11 @@ const AddDocumentForm = () => {
           className="p-2 border border-gray-300 rounded-md w-full"
         />
 
+        {/* File Upload */}
         <input type="file" onChange={handleFileChange} required className="p-2 w-full" />
         {file && <p className="text-sm text-gray-500">{file.name}</p>}
 
+        {/* Upload Button */}
         <button
           type="submit"
           className="py-2 px-4 rounded-md w-full bg-blue-500 hover:bg-blue-600 text-white transition"

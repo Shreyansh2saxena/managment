@@ -4,6 +4,7 @@ import axios from "axios";
 const AddIssuedDoc = () => {
   const [formData, setFormData] = useState({
     employeeId: "",
+    employeeName: "",
     typeOfDoc: "",
     issuedBy: "",
     file: null,
@@ -46,6 +47,7 @@ const AddIssuedDoc = () => {
 
       const formDataObj = new FormData();
       formDataObj.append("employeeId", formData.employeeId);
+      formDataObj.append("employeeName", formData.employeeName);
       formDataObj.append("typeOfDoc", formData.typeOfDoc);
       formDataObj.append("issuedBy", formData.issuedBy);
       formDataObj.append("file", formData.file);
@@ -55,7 +57,7 @@ const AddIssuedDoc = () => {
       });
 
       setMessage("Document added successfully!");
-      setFormData({ employeeId: "", typeOfDoc: "", issuedBy: "", file: null });
+      setFormData({ employeeId: "", employeeName:'',typeOfDoc: "", issuedBy: "", file: null });
       setFileName("");
     } catch (error) {
       setMessage("Error uploading document.");
@@ -86,6 +88,15 @@ const AddIssuedDoc = () => {
           name="employeeId"
           placeholder="Employee ID"
           value={formData.employeeId}
+          onChange={handleChange}
+          required
+          className="p-3 border border-gray-300 rounded-md w-full"
+        />
+        <input
+          type="text"
+          name="employeeName"
+          placeholder="Employee Name"
+          value={formData.employeeName}
           onChange={handleChange}
           required
           className="p-3 border border-gray-300 rounded-md w-full"
