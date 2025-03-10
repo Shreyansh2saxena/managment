@@ -9,6 +9,7 @@ const GetDocumentsByEmployee = () => {
   const [message, setMessage] = useState("");
   const [employees, setEmployees] = useState([]);
   const [matchedEmployees, setMatchedEmployees] = useState([]);
+  const [matchedDocs, setMatchedDocs] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
@@ -16,9 +17,8 @@ const GetDocumentsByEmployee = () => {
       try {
         const [docResponse, empResponse] = await Promise.all([
           axios.get("http://localhost:8080/api/documents"),
-          axios.get("http://localhost:8080/api/employees")
+          axios.get("http://localhost:8080/api/employees"),
         ]);
-
         setAllDocuments(docResponse.data);
         setEmployees(empResponse.data);
         setFilteredDocuments(docResponse.data);
@@ -27,9 +27,29 @@ const GetDocumentsByEmployee = () => {
         setMessage("Failed to load data.");
       }
     };
-
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    if (!searchTerm) {
+      setMatchedEmployees([]);
+      setMatchedDocs([]);
+      return;
+    }
+
+    if (searchType === "employeeName") {
+      const suggestions = employees.filter((emp) =>
+        emp.employeeName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setMatchedEmployees(suggestions);
+      setMatchedDocs([]); // Reset document type suggestions
+    } else if (searchType === "docType") {
+      const suggestions = [...new Set(allDocuments.map((doc) => doc.typeOfDoc))]
+        .filter((type) => type.toLowerCase().includes(searchTerm.toLowerCase()));
+      setMatchedDocs(suggestions);
+      setMatchedEmployees([]); // Reset employee name suggestions
+    }
+  }, [searchTerm, searchType, employees, allDocuments]);
 
   const handleSearch = () => {
     if (!searchTerm) {
@@ -39,94 +59,47 @@ const GetDocumentsByEmployee = () => {
     }
 
     if (searchType === "employeeName") {
-      const matched = employees.filter(emp =>
-        emp.employeeName.toLowerCase().includes(searchTerm.toLowerCase())
+      const matched = employees.find(
+        (emp) => emp.employeeName.toLowerCase() === searchTerm.toLowerCase()
       );
-
-      if (matched.length === 0) {
+      if (matched) {
+        handleEmployeeSelection(matched);
+      } else {
         setFilteredDocuments([]);
         setMessage("No employee found with this name.");
-        setMatchedEmployees([]);
-        return;
-      }
-
-      setMatchedEmployees(matched);
-
-      if (matched.length === 1) {
-        handleEmployeeSelection(matched[0]);
-      } else {
-        setSelectedEmployee(null);
       }
     } else if (searchType === "docType") {
-      const filtered = allDocuments.filter(doc =>
+      const filtered = allDocuments.filter((doc) =>
         doc.typeOfDoc.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setMatchedEmployees([]);
-      setSelectedEmployee(null);
       setFilteredDocuments(filtered);
       setMessage(filtered.length ? "" : "No matching documents found.");
-    }
-  };
-  const handleView = async (docId) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/documents/view/${docId}`,
-        { responseType: "blob" }
-      );
-
-      const fileURL = window.URL.createObjectURL(
-        new Blob([response.data], { type: "application/pdf" })
-      );
-
-      window.open(fileURL, "_blank");
-      setTimeout(() => window.URL.revokeObjectURL(fileURL), 10000);
-    } catch (error) {
-      console.error("Error viewing document:", error);
-      alert("Failed to open the document.");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this document?")) return;
-    try {
-      await axios.delete(`http://localhost:8080/api/documents/${id}`);
-      setAllDocuments(allDocuments.filter((doc) => doc.id !== id))
-      setFilteredDocuments(filteredDocuments.filter((doc) => doc.id !== id));
-      alert("Document deleted successfully.");
-    } catch (error) {
-      alert("Failed to delete document.");
-    }
-  };
-  const handleDownload = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/api/documents/download/${id}`,
-        { responseType: "blob" }
-      );
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `document_${id}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      alert(" Failed to download document.");
     }
   };
 
   const handleEmployeeSelection = (employee) => {
     setSelectedEmployee(employee);
-    const filtered = allDocuments.filter(doc => doc.employeeId === employee.employeeId);
+    setSearchTerm(`${employee.employeeName} (ID: ${employee.employeeId})`);
+    setMatchedEmployees([]); // Hide suggestions
+    setMatchedDocs([]); // Hide document suggestions
+
+    const filtered = allDocuments.filter((doc) => doc.employeeId === employee.employeeId);
     setFilteredDocuments(filtered);
     setMessage(filtered.length ? "" : "No documents found for this employee.");
+  };
+
+  const handleDocSelection = (docType) => {
+    setSearchTerm(docType);
+    setMatchedDocs([]); // Hide suggestions
+    setMatchedEmployees([]); // Hide employee suggestions
+
+    handleSearch();
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">Search Documents</h2>
-
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-6 relative">
         <select
           value={searchType}
           onChange={(e) => {
@@ -134,6 +107,7 @@ const GetDocumentsByEmployee = () => {
             setSearchTerm("");
             setSelectedEmployee(null);
             setMatchedEmployees([]);
+            setMatchedDocs([]);
             setFilteredDocuments(allDocuments);
           }}
           className="p-3 border border-gray-300 rounded-md"
@@ -142,13 +116,46 @@ const GetDocumentsByEmployee = () => {
           <option value="docType">Search by Document Type</option>
         </select>
 
-        <input
-          type="text"
-          placeholder={`Enter ${searchType === "employeeName" ? "Employee Name" : "Document Type"}`}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-3 border border-gray-300 rounded-md w-full"
-        />
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder={`Enter ${searchType === "employeeName" ? "Employee Name" : "Document Type"}`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="p-3 border border-gray-300 rounded-md w-full"
+          />
+
+          {/* Employee Suggestions (with ID) */}
+          {matchedEmployees.length > 0 && (
+            <ul className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10">
+              {matchedEmployees.map((emp) => (
+                <li
+                  key={emp.employeeId}
+                  onClick={() => handleEmployeeSelection(emp)}
+                  className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between"
+                >
+                  <span>{emp.employeeName}</span>
+                  <span className="text-gray-500 text-sm">ID: {emp.employeeId}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Document Type Suggestions */}
+          {matchedDocs.length > 0 && (
+            <ul className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10">
+              {matchedDocs.map((docType, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleDocSelection(docType)}
+                  className="p-2 cursor-pointer hover:bg-gray-100"
+                >
+                  {docType}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         <button
           onClick={handleSearch}
@@ -158,25 +165,7 @@ const GetDocumentsByEmployee = () => {
         </button>
       </div>
 
-      {matchedEmployees.length > 1 && (
-        <div className="mb-4">
-          <label className="block text-gray-700 font-semibold mb-2">Select Employee ID:</label>
-          <select
-            onChange={(e) => {
-              const emp = employees.find(emp => emp.employeeId === parseInt(e.target.value));
-              handleEmployeeSelection(emp);
-            }}
-            className="p-3 border border-gray-300 rounded-md w-full"
-          >
-            <option value="">-- Select Employee ID --</option>
-            {matchedEmployees.map(emp => (
-              <option key={emp.employeeId} value={emp.employeeId}>
-                {emp.employeeId} - {emp.employeeName}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {message && <p className="text-red-500 text-center">{message}</p>}
 
       {filteredDocuments.length > 0 && (
         <div className="overflow-x-auto">
@@ -187,10 +176,7 @@ const GetDocumentsByEmployee = () => {
                 <th className="border p-3 text-left">Employee ID</th>
                 <th className="border p-3 text-left">File Name</th>
                 <th className="border p-3 text-left">Type</th>
-                <th className="border p-3 text-left">Size (KB)</th>
-                <th className="border p-3 text-left">Content Type</th>
                 <th className="border p-3 text-left">Created Date</th>
-                <th className="border p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -200,14 +186,7 @@ const GetDocumentsByEmployee = () => {
                   <td className="border p-3">{doc.employeeId}</td>
                   <td className="border p-3">{doc.fileName}</td>
                   <td className="border p-3">{doc.typeOfDoc}</td>
-                  <td className="border p-3">{(doc.fileSize / 1024).toFixed(2)}</td>
-                  <td className="border p-3">{doc.contentType}</td>
                   <td className="border p-3">{doc.createdDate}</td>
-                  <td className="border p-3 flex gap-2">
-                    <button onClick={() => handleView(doc.id)} className="bg-green-500 text-white py-2 px-4 rounded-md text-sm">View</button>
-                    <button onClick={() => handleDelete(doc.id)} className="bg-red-500 text-white py-2 px-4 rounded-md text-sm">Delete</button>
-                    <button onClick={() => handleDownload(doc.id)} className="bg-blue-500 text-white py-2 px-4 rounded-md text-sm">Download</button>
-                  </td>
                 </tr>
               ))}
             </tbody>
