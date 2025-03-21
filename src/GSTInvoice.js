@@ -199,15 +199,27 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
 
   // Calculate totals
   const calculateTotals = () => {
-    const subtotal = data.items.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const sgst = data.items.reduce((sum, item) => sum + (item.sgst / 100 || 0), 0);
-    const cgst = data.items.reduce((sum, item) => sum + (item.cgst / 100 || 0), 0);
-    const igst = data.items.reduce((sum, item) => sum + (item.igst / 100 || 0), 0);
+    let subtotal = 0;
+    let sgst = 0;
+    let cgst = 0;
+    let igst = 0;
+  
+    // Loop through each item and calculate the totals
+    for (let i = 0; i < data.items.length; i++) {
+      const item = data.items[i];
+      const itemAmount = item.amount || 0;
+  
+      subtotal += itemAmount;
+      sgst += (itemAmount * (item.sgst || 0)) / 100;
+      cgst += (itemAmount * (item.cgst || 0)) / 100;
+      igst += (itemAmount * (item.igst || 0)) / 100;
+    }
+  
     const total = subtotal + sgst + cgst + igst;
-
+  
     return { subtotal, sgst, cgst, igst, total };
   };
-
+  
   const totals = calculateTotals();
 
   return (
@@ -269,6 +281,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
           <View style={styles.tableRow}>
             <Text style={[styles.tableHeader, { flex: 3 }]}>Item Description</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>Qty</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>HSN/SAC</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>Rate</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>SGST</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>CGST</Text>
@@ -284,18 +297,17 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
                   {item.description}
                 </Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.quantity}</Text>
+                <Text style={[styles.hsnCell, { flex: 2}]}>
+                  HSN/SAC: {item.hsnSac || "-"}
+                </Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.rate}</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.sgst }(%)</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.cgst}(%)</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.igst}(%)</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.amount}</Text>
+                
               </View>
-              <View style={styles.hsnRow}>
-                <Text style={[styles.hsnCell, { flex: 3, textAlign: 'left' }]}>
-                  HSN/SAC: {item.hsnSac || "-"}
-                </Text>
-                <Text style={[styles.hsnCell, { flex: 6 }]}></Text>
-              </View>
+              
             </React.Fragment>
           ))}
         </View>
