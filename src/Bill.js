@@ -3,7 +3,7 @@ import axios from "axios";
 import { pdf } from '@react-pdf/renderer';
 import GSTInvoice from './GSTInvoice'; 
 
-// Define the initial state for a new bill
+
 const initialBillState = {
   vendorName: "",
   customerName: "",
@@ -96,11 +96,13 @@ const App = () => {
       const response = await axios.get(`http://localhost:8080/api/vendors/${vendorId}/image`, {
         responseType: "blob"
       });
-
+  
       const logoUrl = URL.createObjectURL(response.data);
-      setVendorLogo(logoUrl);  // ✅ Set as logo source
+      setVendorLogo(logoUrl);  // Keep this for other parts of the app
+      return logoUrl;  // Return the URL
     } catch (error) {
       console.error("Error fetching vendor logo:", error);
+      return null;
     }
   };
 
@@ -168,11 +170,11 @@ const App = () => {
     let totalAmount = 0;
     let totalQuantity = 0;
     const items = bill.billItems.map((item) => {
-      const quantity = parseInt(item.quantity || "0", 10);
+      const quantity = parseInt(item.quantity || "0");
       const rate = parseFloat(item.rate || "0");
-      const sgstRate = parseFloat(item.sgstRate || "0") / 100;
-      const cgstRate = parseFloat(item.cgstRate || "0") / 100;
-      const igstRate = parseFloat(item.igstRate || "0") / 100;
+      const sgstRate = parseFloat(item.sgstRate/100  || "0");
+      const cgstRate = parseFloat(item.cgstRate/100   || "0");
+      const igstRate = parseFloat(item.igstRate/100  || "0");
 
       const baseAmount = quantity * rate;
       const sgstAmount = baseAmount * sgstRate;
@@ -212,59 +214,57 @@ const App = () => {
   // ✅ Function to Generate PDF
   const handleViewPDF = async (bill) => {
     try {
-      // Fetch vendor details using vendor name
+      // Fetch vendor details
       const vendorResponse = await axios.get(`http://localhost:8080/api/vendors?name=${bill.vendorName}`);
-      const vendor = vendorResponse.data;  // Assuming the first match is the correct vendor
-  
-      // Fetch customer details using customer name
-      const customerResponse = await axios.get(`http://localhost:8080/api/customers?name=${bill.customerName}`);
-      const customer = customerResponse.data;  // Assuming the first match is the correct customer
+      const vendor = vendorResponse.data[0] || {};
 
-     
-  
-      // Construct the invoice data with fetched vendor and customer details
+      // Fetch customer details
+      const customerResponse = await axios.get(`http://localhost:8080/api/customers?name=${bill.customerName}`);
+      const customer = customerResponse.data[0] || {};
+
+      // Fetch the vendor logo
+      const logoUrl = await fetchVendorLogo(vendor.id);
+
+      // Prepare the invoice data
       const invoiceData = {
-        invoiceNumber: bill.billNumber || 'INV-XX',
+        invoiceNumber: bill.billNumber,
         invoiceDate: bill.billDate || new Date().toLocaleDateString(),
-        dueDate: bill.dueDate || bill.billDate || new Date().toLocaleDateString(),
-  
         company: {
-          name: vendor?.name || bill.vendorName || 'Saanvi',
-          gstin: vendor?.gstNumber || 'Company\'s GSTIN',
-          address: vendor?.address || 'Company\'s Address',
-          state: vendor?.state || 'State',
+          name: vendor.name || "Company Name",
+          gstin: vendor.gstNumber || "GSTIN",
+          address: vendor.address || "Vendor Address",
+          state: vendor.state || "State",
+          country: vendor.country || "Country",
         },
-  
         client: {
-          name: customer?.name || bill.customerName || 'Your Client\'s Company',
-          gstin: customer?.gstNumber || 'Client\'s GSTIN',
-          address: customer?.address || 'Client\'s Address',
-          state: customer?.state || 'State',
+          name: customer.name || "Customer Name",
+          gstin: customer.gstNumber || "Customer GSTIN",
+          address: customer.address || "Customer Address",
+          city: customer.city || "City",
+          state: customer.state || "State",
+          country: customer.country || "Country",
         },
-  
-        items: bill.billItems.map(item => ({
-          description: item.description || '',
-          hsnSac: item.hsnSac || '',
-          quantity: item.quantity || 0,
-          rate: item.rate || 0,
-          sgst: (parseFloat(item.sgstRate || 0) / 100 * (item.quantity * item.rate)) || 0,
-          cgst: (parseFloat(item.cgstRate || 0) / 100 * (item.quantity * item.rate)) || 0,
-          igst: (parseFloat(item.igstRate || 0) / 100 * (item.quantity * item.rate)) || 0,
-          amount: (item.quantity * item.rate) || 0
+        items: bill.billItems.map((item) => ({
+          description: item.description,
+          hsnSac: item.hsnSac,
+          quantity: item.quantity,
+          rate: item.rate,
+          sgst: (item.sgstRate / 100) * item.quantity * item.rate,
+          cgst: (item.cgstRate / 100) * item.quantity * item.rate,
+          igst: (item.igstRate / 100) * item.quantity * item.rate,
+          amount: item.quantity * item.rate,
         })),
-  
-        notes: bill.notes || 'It was great doing business with you.'
+        notes: "Thank you for your business!",
       };
-  
+
       // Generate and open the PDF
-      const blob = await pdf(<GSTInvoice invoice={invoiceData} vendorLogo={vendorLogo} />).toBlob();
+      const blob = await pdf(<GSTInvoice invoice={invoiceData} vendorLogo={logoUrl} />).toBlob();
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 100);
   
-    } catch (error) {
-      console.error("Error fetching vendor or customer details:", error);
-      alert("Failed to fetch vendor or customer details.");
+    }  catch (error) {
+      console.error("Error generating PDF:", error);
     }
   };
   
@@ -289,9 +289,7 @@ const App = () => {
         }
       }
   }
-
  
-
   return (
     <div className="min-h-screen bg-gray-100 p-10">
       <h1 className="text-3xl font-bold mb-6">Bill Management</h1>
@@ -459,7 +457,7 @@ const App = () => {
                     View
                   </button>
                   <button onClick={() => handlePending(b.billNumber)} className="bg-blue-500 text-white px-4 py-1 ml-2 rounded-full">
-                    Paid
+                    Piad
                   </button>
                 </td>
               </tr>

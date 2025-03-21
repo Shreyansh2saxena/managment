@@ -160,7 +160,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
   const defaultInvoice = {
     invoiceNumber: 'INV-XX',
     invoiceDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
-    dueDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    
     company: {
       name: 'Your Company',
       contactName: 'Your Name',
@@ -178,35 +178,33 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
       state: 'State',
       country: 'India'
     },
-    
+
     items: [
       {
         description: 'Brochure Design',
         hsnSac: '',
         quantity: 2,
-        rate: 100.00,
+        rate: 0.00,
         sgst: 0.00,
         cgst: 0.00,
         igst: 0.00,
-        amount: 200.00
+        amount: 0.00
       }
     ],
     notes: 'It was great doing business with you.'
   };
 
-  
 
-  // Use provided invoice or default
   const data = invoice || defaultInvoice;
 
   // Calculate totals
   const calculateTotals = () => {
     const subtotal = data.items.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const sgst = data.items.reduce((sum, item) => sum + (item.sgst/100 || 0), 0);
-    const cgst = data.items.reduce((sum, item) => sum + (item.cgst/100 || 0), 0);
-    const igst = data.items.reduce((sum, item) => sum + (item.igst/100 || 0), 0);
+    const sgst = data.items.reduce((sum, item) => sum + (item.sgst / 100 || 0), 0);
+    const cgst = data.items.reduce((sum, item) => sum + (item.cgst / 100 || 0), 0);
+    const igst = data.items.reduce((sum, item) => sum + (item.igst / 100 || 0), 0);
     const total = subtotal + sgst + cgst + igst;
-    
+
     return { subtotal, sgst, cgst, igst, total };
   };
 
@@ -218,9 +216,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
         {/* Header Section with Logo and Title */}
         <View style={styles.headerRow}>
           <View>
-          {vendorLogo && <Image src={vendorLogo} style={styles.logo} />}  
-
-            
+            {vendorLogo && <Image src={vendorLogo} style={styles.logo} />}
           </View>
           <View>
             <Text style={styles.title}>TAX INVOICE</Text>
@@ -230,16 +226,14 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
 
         {/* Seller and Buyer Information */}
         <View style={styles.addressSection}>
-          {/* Seller Information */}
-          <View style={styles.addressColumn}>
-            <Text style={styles.value}>{data.company.name}</Text>
-            <Text style={styles.value}>{data.company.contactName}</Text>
-            <Text style={styles.value}>GSTIN: {data.company.gstin}</Text>
-            <Text style={styles.value}>{data.company.address}</Text>
-            <Text style={styles.value}>{data.company.city}</Text>
-            <Text style={styles.value}>{data.company.state}</Text>
-            <Text style={styles.value}>{data.company.country}</Text>
-          </View>
+        <View style={styles.addressColumn}>
+          
+          <Text style={styles.value}>{invoice.company.name}</Text>
+          <Text style={styles.value}>GSTIN: {invoice.company.gstin}</Text>
+          <Text style={styles.value}>{invoice.company.address}</Text>
+          <Text style={styles.value}>{invoice.company.state}</Text>
+          
+        </View>
 
           {/* Invoice Details */}
           <View style={styles.detailsColumn}>
@@ -251,10 +245,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
               <Text style={[styles.label, { width: 100 }]}>Invoice Date</Text>
               <Text>{data.invoiceDate}</Text>
             </View>
-            <View style={styles.detailRow}>
-              <Text style={[styles.label, { width: 100 }]}>Due Date</Text>
-              <Text>{data.dueDate}</Text>
-            </View>
+            
           </View>
         </View>
 
@@ -264,13 +255,13 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
           <Text style={styles.value}>{data.client.name}</Text>
           <Text style={styles.value}>GSTIN: {data.client.gstin}</Text>
           <Text style={styles.value}>{data.client.address}</Text>
-          <Text style={styles.value}>{data.client.city}</Text>
+         
           <Text style={styles.value}>{data.client.state}</Text>
-          <Text style={styles.value}>{data.client.country}</Text>
+         
         </View>
 
-        
-        
+
+
 
         {/* Invoice Items Table */}
         <View style={styles.table}>
@@ -284,7 +275,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
             <Text style={[styles.tableHeader, { flex: 1 }]}>Igst</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>Amount</Text>
           </View>
-          
+
           {/* Table Items */}
           {data.items.map((item, index) => (
             <React.Fragment key={index}>
@@ -294,9 +285,9 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
                 </Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.quantity}</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.rate}</Text>
-                <Text style={[styles.tableCell, { flex: 1 }]}>{item.sgst}(%)</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.sgst }(%)</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.cgst}(%)</Text>
-                <Text style={[styles.tableCell, { flex: 1 }]}>{item.igst  || "0.00"}(%)</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.igst}(%)</Text>
                 <Text style={[styles.tableCell, { flex: 1 }]}>{item.amount}</Text>
               </View>
               <View style={styles.hsnRow}>
@@ -316,15 +307,15 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>SGST</Text>
-          <Text style={styles.totalValue}>{totals.sgst.toFixed(2)/100}</Text>
+          <Text style={styles.totalValue}>{totals.sgst.toFixed(2)}</Text>
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>CGST</Text>
-          <Text style={styles.totalValue}>{totals.cgst.toFixed(2)/100}</Text>
+          <Text style={styles.totalValue}>{totals.cgst.toFixed(2)}</Text>
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>igst</Text>
-          <Text style={styles.totalValue}>{totals.igst.toFixed(2)/100}</Text>
+          <Text style={styles.totalValue}>{totals.igst.toFixed(2)}</Text>
         </View>
         <View style={styles.grandTotal}>
           <Text style={styles.grandTotalLabel}>TOTAL</Text>
