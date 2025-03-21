@@ -9,13 +9,16 @@ import AddDocument from "./AddDocument";
 import ViewDocuments from "./ViewDocuments";
 import AddIssuedDocument from "./AddIssuedDocument";
 import ViewIssuedDocuments from "./ViewIssuedDocuments";
+import MailPage from "./mails"; 
+import Vendor from "./Vendor";
+import Customer from "./Customer";
+import Bill from "./Bill";
 
 const Dashboard = () => {
   const [sidebarItems, setSidebarItems] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -38,6 +41,11 @@ const Dashboard = () => {
       "Issued Documents": [
         { name: "Add Issued Document", path: "/issued-documents/add" },
         { name: "View Issued Documents", path: "/issued-documents/view" },
+      ],
+      Vendor: [
+        { name: "Vendor", path: "/vendors" },
+        { name: "Customer", path: "/customer" },
+        { name: "Bill", path: "/bill"},
       ],
     };
     setSidebarItems(sidebarData[section] || []);
@@ -63,6 +71,10 @@ const Dashboard = () => {
               <Route path="/documents/view" element={<ViewDocuments />} />
               <Route path="/issued-documents/add" element={<AddIssuedDocument />} />
               <Route path="/issued-documents/view" element={<ViewIssuedDocuments />} />
+              <Route path="/mails" element={<MailPage />} /> 
+              <Route path="/vendors" element={<Vendor />} /> 
+              <Route path="/customer" element={<Customer />} /> 
+              <Route path="/bill" element={<Bill />} /> 
             </Routes>
           </div>
         </div>
