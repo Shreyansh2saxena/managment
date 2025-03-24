@@ -247,9 +247,9 @@ const App = () => {
       const igstRate = parseFloat(item.igstRate/100 || "0");
 
       const baseAmount = quantity * rate;
-      const sgstAmount = baseAmount * sgstRate;
-      const cgstAmount = baseAmount * cgstRate;
-      const igstAmount = baseAmount * igstRate;
+      const sgstAmount = baseAmount * (sgstRate/100);
+      const cgstAmount = baseAmount * (cgstRate/100);
+      const igstAmount = baseAmount * (igstRate/100);
       const itemTotal = baseAmount + sgstAmount + cgstAmount + igstAmount;
 
       totalQuantity += quantity;
@@ -328,16 +328,23 @@ const App = () => {
           state: customer.state || "State",
           country: customer.country || "Country",
         },
-        items: bill.billItems.map((item) => ({
-          description: item.description,
-          hsnSac: item.hsnSac,
-          quantity: item.quantity,
-          rate: item.rate,
-          sgst: (item.sgstRate / 100) * item.quantity * item.rate,
-          cgst: (item.cgstRate / 100) * item.quantity * item.rate,
-          igst: (item.igstRate / 100) * item.quantity * item.rate,
-          amount: item.quantity * item.rate,
-        })),
+        items: bill.billItems.map((item) => {
+          const quantity = parseFloat(item.quantity) || 0;
+          const rate = parseFloat(item.rate) || 0;
+          const amount = quantity * rate;
+      
+          return {
+              description: item.description,
+              hsnSac: item.hsnSac,
+              quantity,
+              rate,
+              sgst: (parseFloat(item.sgstRate) || 0) * amount / 100,
+              cgst: (parseFloat(item.cgstRate) || 0) * amount / 100,
+              igst: (parseFloat(item.igstRate) || 0) * amount / 100,
+              amount,
+          };
+      }),
+      
         notes: "Thank you for your business!",
       };
 
