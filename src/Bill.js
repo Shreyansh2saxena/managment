@@ -260,7 +260,7 @@ const App = () => {
         sgstAmount, 
         cgstAmount, 
         igstAmount, 
-        totalAmount: itemTotal 
+        totalAmount: itemTotal
       };
     });
     return { ...bill, billItems: items, totalAmount, totalQuantity };
