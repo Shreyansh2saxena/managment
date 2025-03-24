@@ -1,88 +1,354 @@
-import React, { useState } from "react";
-import { Document, Page, PDFViewer } from "@react-pdf/renderer";
-import GSTInvoice from "./GSTInvoice";
-import axios from "axios";
+import React from 'react';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
-const InvoicePreview = ({ bill }) => {
-  const [invoiceData, setInvoiceData] = useState(null);
-  const [vendorLogo, setVendorLogo] = useState(null);
+// Create styles for the PDF document
+const styles = StyleSheet.create({
+  page: {
+    padding: 30,
+    fontFamily: 'Helvetica',
+    fontSize: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  logo: {
+    width: 100,
+    height: 80,
+    objectFit: 'contain',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#8B4513',
+    textAlign: 'right',
+  },
+  invoiceNumber: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  section: {
+    marginBottom: 15,
+  },
+  addressSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  addressColumn: {
+    width: '48%',
+  },
+  detailsColumn: {
+    width: '48%',
+  },
+  label: {
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  value: {
+    marginBottom: 3,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  placeOfSupply: {
+    marginBottom: 10,
+  },
+  table: {
+    display: 'table',
+    width: 'auto',
+    borderStyle: 'solid',
+    borderWidth: 1,
+    borderColor: '#000',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+  },
+  tableHeader: {
+    backgroundColor: '#000',
+    color: '#fff',
+    padding: 5,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  tableCell: {
+    padding: 5,
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+    textAlign: 'center',
+  },
+  hsnRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#000',
+    backgroundColor: '#f9f9f9',
+  },
+  hsnCell: {
+    padding: 3,
+    fontSize: 10,
+    color: '#666',
+    borderRightWidth: 1,
+    borderRightColor: '#000',
+  },
+  totalsSection: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 5,
+  },
+  totalLabel: {
+    width: 100,
+    textAlign: 'right',
+    paddingRight: 10,
+  },
+  totalValue: {
+    width: 80,
+    textAlign: 'right',
+  },
+  grandTotal: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: '#000',
+    paddingTop: 5,
+    marginTop: 5,
+  },
+  grandTotalLabel: {
+    width: 100,
+    textAlign: 'right',
+    paddingRight: 10,
+    fontWeight: 'bold',
+  },
+  grandTotalValue: {
+    width: 80,
+    textAlign: 'right',
+    fontWeight: 'bold',
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 3,
+  },
+  notes: {
+    marginTop: 20,
+  },
+  notesTitle: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  signature: {
+    marginTop: 50,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  signatureBox: {
+    borderTopWidth: 1,
+    borderTopColor: '#000',
+    width: 150,
+    textAlign: 'center',
+    paddingTop: 5,
+  }
+});
 
-  const fetchInvoiceData = async () => {
-    try {
-      const vendor = bill.vendorName
-        ? (await axios.get(`http://localhost:8080/api/vendors?name=${bill.vendorName}`)).data
-        : {};
+// GST Invoice Component
+const GSTInvoice = ({ invoice, vendorLogo }) => {
+  // Default empty invoice if none provided
+  const defaultInvoice = {
+    invoiceNumber: 'INV-XX',
+    invoiceDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+    
+    company: {
+      name: 'Your Company',
+      contactName: 'Your Name',
+      gstin: 'Company\'s GSTIN',
+      address: 'Company\'s Address',
+      city: 'City',
+      state: 'State',
+      country: 'India'
+    },
+    client: {
+      name: 'Your Client\'s Company',
+      gstin: 'Client\'s GSTIN',
+      address: 'Client\'s Address',
+      city: 'City',
+      state: 'State',
+      country: 'India'
+    },
 
-      const customer = bill.customerName
-        ? (await axios.get(`http://localhost:8080/api/customers?name=${bill.customerName}`)).data
-        : {};
-
-      // const logoUrl = await fetchVendorLogo(vendor.id);
-      // setVendorLogo(logoUrl);
-
-      const invoice = {
-        invoiceNumber: bill.billNumber,
-        invoiceDate: bill.billDate || new Date().toLocaleDateString(),
-        company: {
-          name: vendor.name || "Company Name",
-          gstin: vendor.gstNumber || "GSTIN",
-          address: vendor.address || "Vendor Address",
-          state: vendor.state || "State",
-          country: vendor.country || "Country",
-        },
-        client: {
-          name: customer.name || "Customer Name",
-          gstin: customer.gstNumber || "Customer GSTIN",
-          address: customer.address || "Customer Address",
-          city: customer.city || "City",
-          state: customer.state || "State",
-          country: customer.country || "Country",
-        },
-        items: bill.billItems.map((item) => {
-          const quantity = parseFloat(item.quantity) || 0;
-          const rate = parseFloat(item.rate) || 0;
-          const amount = quantity * rate;
-
-          return {
-            description: item.description,
-            hsnSac: item.hsnSac,
-            quantity,
-            rate,
-            sgst: (parseFloat(item.sgstRate) || 0) * amount / 100,
-            cgst: (parseFloat(item.cgstRate) || 0) * amount / 100,
-            igst: (parseFloat(item.igstRate) || 0) * amount / 100,
-            amount,
-          };
-        }),
-        notes: "Thank you for your business!",
-      };
-
-      setInvoiceData(invoice);
-    } catch (error) {
-      console.error("Error fetching invoice data:", error);
-    }
+    items: [
+      {
+        description: 'Brochure Design',
+        hsnSac: '',
+        quantity: 2,
+        rate: 0.00,
+        sgst: 0.00,
+        cgst: 0.00,
+        igst: 0.00,
+        amount: 0.00
+      }
+    ],
+    notes: 'It was great doing business with you.'
   };
 
-  React.useEffect(() => {
-    fetchInvoiceData();
-  }, [bill]);
+
+  const data = invoice || defaultInvoice;
+
+  // Calculate totals
+  const calculateTotals = () => {
+    let subtotal = 0;
+    let sgst = 0;
+    let cgst = 0;
+    let igst = 0;
+  
+    
+    for (let i = 0; i < data.items.length; i++) {
+      const item = data.items[i];
+      const itemAmount = item.amount || 0;
+  
+      subtotal += itemAmount;
+      sgst += (itemAmount * (item.sgst || 0)) / 100;
+      cgst += (itemAmount * (item.cgst || 0)) / 100;
+      igst += (itemAmount * (item.igst || 0)) / 100;
+    }
+  
+    const total = subtotal + sgst + cgst + igst;
+  
+    return { subtotal, sgst, cgst, igst, total };
+  };
+  
+  const totals = calculateTotals();
 
   return (
-    <div>
-      <h2>Invoice Preview</h2>
-      {invoiceData ? (
-        <PDFViewer style={{ width: "100%", height: "500px" }}>
-          <Document>
-            <Page>
-              <GSTInvoice invoice={invoiceData} vendorLogo={vendorLogo} />
-            </Page>
-          </Document>
-        </PDFViewer>
-      ) : (
-        <p>Loading invoice...</p>
-      )}
-    </div>
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header Section with Logo and Title */}
+        <View style={styles.headerRow}>
+          <View>
+            {vendorLogo && <Image src={vendorLogo} style={styles.logo} />}
+          </View>
+          <View>
+            <Text style={styles.title}>TAX INVOICE</Text>
+            <Text style={styles.invoiceNumber}>#{data.invoiceNumber}</Text>
+          </View>
+        </View>
+
+        {/* Seller and Buyer Information */}
+        <View style={styles.addressSection}>
+        <View style={styles.addressColumn}>
+          
+          <Text style={styles.value}>{invoice.company.name}</Text>
+          <Text style={styles.value}>GSTIN: {invoice.company.gstin}</Text>
+          <Text style={styles.value}>{invoice.company.address}</Text>
+          <Text style={styles.value}>{invoice.company.state}</Text>
+          
+        </View>
+
+          {/* Invoice Details */}
+          <View style={styles.detailsColumn}>
+            <View style={styles.detailRow}>
+              <Text style={[styles.label, { width: 100 }]}>Invoice#</Text>
+              <Text>{data.invoiceNumber}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={[styles.label, { width: 100 }]}>Invoice Date</Text>
+              <Text>{data.invoiceDate}</Text>
+            </View>
+            
+          </View>
+        </View>
+
+        {/* Client Information */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Bill To:</Text>
+          <Text style={styles.value}>{data.client.name}</Text>
+          <Text style={styles.value}>GSTIN: {data.client.gstin}</Text>
+          <Text style={styles.value}>{data.client.address}</Text>
+         
+          <Text style={styles.value}>{data.client.state}</Text>
+         
+        </View>
+
+
+
+
+        {/* Invoice Items Table */}
+        <View style={styles.table}>
+          {/* Table Header */}
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableHeader, { flex: 3 }]}>Item Description</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>Qty</Text>
+            <Text style={[styles.tableHeader, { flex: 2 }]}>HSN/SAC</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>Rate</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>SGST</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>CGST</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>Igst</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>Amount</Text>
+          </View>
+
+          {/* Table Items */}
+          {data.items.map((item, index) => (
+            <React.Fragment key={index}>
+              <View style={styles.tableRow}>
+                <Text style={[styles.tableCell, { flex: 3, textAlign: 'left' }]}>
+                  {item.description}
+                </Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.quantity}</Text>
+                <Text style={[styles.hsnCell, { flex: 2}]}>
+                   {item.hsnSac || "-"}
+                </Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.rate}</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.sgst }</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.cgst}</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.igst}</Text>
+                <Text style={[styles.tableCell, { flex: 1 }]}>{item.amount}</Text>
+                
+              </View>
+              
+            </React.Fragment>
+          ))}
+        </View>
+
+        {/* Totals Section */}
+        <View style={styles.totalsSection}>
+          <Text style={styles.totalLabel}>Sub Total</Text>
+          <Text style={styles.totalValue}>{totals.subtotal.toFixed(2)}</Text>
+        </View>
+        <View style={styles.totalsSection}>
+          <Text style={styles.totalLabel}>SGST</Text>
+          <Text style={styles.totalValue}>{totals.sgst.toFixed(2)}%</Text>
+        </View>
+        <View style={styles.totalsSection}>
+          <Text style={styles.totalLabel}>CGST</Text>
+          <Text style={styles.totalValue}>{totals.cgst.toFixed(2)}%</Text>
+        </View>
+        <View style={styles.totalsSection}>
+          <Text style={styles.totalLabel}>igst</Text>
+          <Text style={styles.totalValue}>{totals.igst.toFixed(2)}%</Text>
+        </View>
+        <View style={styles.grandTotal}>
+          <Text style={styles.grandTotalLabel}>TOTAL</Text>
+          <Text style={styles.grandTotalValue}>{totals.total.toFixed(2)}</Text>
+        </View>
+
+        {/* Notes */}
+        <View style={styles.notes}>
+          <Text style={styles.notesTitle}>Notes</Text>
+          <Text>{data.notes}</Text>
+        </View>
+
+        {/* Signature */}
+        <View style={styles.signature}>
+          <View style={styles.signatureBox}>
+            <Text>Authorized Signature</Text>
+          </View>
+        </View>
+      </Page>
+    </Document>
   );
 };
 
-export default InvoicePreview;
+export default GSTInvoice;

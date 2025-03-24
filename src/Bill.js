@@ -254,7 +254,7 @@ const App = () => {
 
       totalQuantity += quantity;
       totalAmount += itemTotal;
-
+      
       return { 
         ...item, 
         sgstAmount, 
