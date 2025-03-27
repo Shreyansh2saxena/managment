@@ -8,36 +8,47 @@ const ViewEmployee = () => {
   const [filterFields, setFilterFields] = useState([]);
   const [editEmployee, setEditEmployee] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [page,setPage] = useState(0);
+  const [totPage , settotpage] = useState(1);
+  const [size] = useState(10);
+
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [page]);
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/employees");
-      setEmployees(response.data);
+      const response = await axios.get(
+        `http://localhost:8081/api/employees?page=${page}&size=${size}`
+      );
+  
+      const { content, totalPages } = response.data; // Correct key from API
+      setEmployees(content || []);
+      settotpage(totalPages || 1); // Fix the total page count
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
   };
-
+  
+  
+ 
+  
   const filteredEmployees = searchId
     ? employees.filter((emp) => emp.employeeId.toString().includes(searchId))
     : employees;
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      try {
-        await axios.delete(`http://localhost:8080/api/employees/${id}`);
-        alert("Employee deleted successfully!");
-        fetchEmployees();
-      } catch (error) {
-        console.error("Error deleting employee:", error);
+    const handleDelete = async (id) => {
+      if (window.confirm("Are you sure you want to delete this employee?")) {
+        try {
+          await axios.delete(`http://localhost:8081/api/employees/${id}`);
+          alert("Employee deleted successfully!");
+          setEmployees(employees.filter((emp) => emp.employeeId !== id)); // Remove deleted employee
+        } catch (error) {
+          console.error("Error deleting employee:", error);
+        }
       }
-    }
-  };
-
+    };
   const openEditDialog = (employee) => {
     setEditEmployee(employee);
     setIsEditModalOpen(true);
@@ -55,7 +66,7 @@ const ViewEmployee = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:8080/api/employees/${editEmployee.employeeId}`,
+        `http://localhost:8081/api/employees/${editEmployee.employeeId}`,
         editEmployee,
         {
           headers: {
@@ -254,6 +265,26 @@ const ViewEmployee = () => {
             </div>
           </div>
         )}
+      <div className="flex justify-between items-center my-4">
+  <button
+    onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+    disabled={page === 0}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Previous
+  </button>
+
+  <span className="text-lg">Page {page + 1} of {totPage}</span>
+
+  <button
+    onClick={() => setPage((prev) => (prev + 1 < totPage ? prev + 1 : prev))}
+    disabled={page + 1 >= totPage}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+</div>
+
       </div>
     </div>
   );

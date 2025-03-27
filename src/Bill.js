@@ -4,9 +4,9 @@ import { pdf } from '@react-pdf/renderer';
 import GSTInvoice from './GSTInvoice'; 
 
 const initialBillState = {
-  vendorId: "",
+  vendor: null,
   vendorName: "",
-  customerId: "",
+  customer: null,
   customerName: "",
   billDate: new Date().toISOString().split('T')[0], // Default to today
   customerAddress: "",
@@ -27,7 +27,7 @@ const initialBillState = {
   ],
   totalAmount: 0,
   totalQuantity: 0,
-  paymentStatus: "Pending" // Changed from billStatus to match what's used elsewhere
+  paymentStatus: "Pending"
 };
 
 const App = () => {
@@ -36,54 +36,31 @@ const App = () => {
   const [vendorLogo, setVendorLogo] = useState();
   const [vendorSuggestions, setVendorSuggestions] = useState([]);
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
-  
-  // Cache for vendor and customer data to reduce API calls
-  const [vendorsCache, setVendorsCache] = useState({});
-  const [customersCache, setCustomersCache] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+      const billPp = 10;
+      const [totalPages, setTotalPages] = useState(1);
+    
 
   useEffect(() => {
     fetchBills();
-    // Pre-fetch all vendors and customers to cache
-    fetchAndCacheAllVendors();
-    fetchAndCacheAllCustomers();
-  }, []);
+  }, [currentPage]);
 
-  const fetchAndCacheAllVendors = async () => {
+  const fetchBills = async (page) => {
     try {
-      const response = await axios.get("http://localhost:8080/api/vendors");
-      const vendors = response.data;
-      const cache = {};
+      const response = await axios.get(`http://localhost:8081/api/GSTbills?page=${currentPage}&size=${billPp}`);
       
-      vendors.forEach(vendor => {
-        cache[vendor.id] = vendor;
-      });
-      
-      setVendorsCache(cache);
+    
+      const data = response.data;
+  
+      setBills(Array.isArray(data.content) ? data.content : []); 
+      setTotalPages(data.totalPages ?? 1);
     } catch (error) {
-      console.error("Error fetching vendors:", error);
+      console.error("Error fetching bills:", error);
+      setBills([]);
+      setTotalPages(1);
     }
   };
-
-  const fetchAndCacheAllCustomers = async () => {
-    try {
-      const response = await axios.get("http://localhost:8080/api/customers");
-      const customers = response.data;
-      const cache = {};
-      
-      customers.forEach(customer => {
-        cache[customer.id] = customer;
-      });
-      
-      setCustomersCache(cache);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-    }
-  };
-
-  const fetchBills = async () => {
-    const response = await axios.get("http://localhost:8080/api/bills");
-    setBills(response.data);
-  };
+  
 
   const fetchVendorSuggestions = async (query) => {
     if (query.trim() === "") {
@@ -92,30 +69,16 @@ const App = () => {
     }
 
     try {
-      // Use cached data if available
-      if (Object.keys(vendorsCache).length > 0) {
-        const filtered = Object.values(vendorsCache)
-          .filter(vendor => 
-            vendor.name.toLowerCase().includes(query.toLowerCase())
-          )
-          .map(vendor => ({
-            id: vendor.id, 
-            name: vendor.name
-          }));
-        setVendorSuggestions(filtered);
-      } else {
-        // Fallback to API if cache is empty
-        const response = await axios.get("http://localhost:8080/api/vendors");
-        const filtered = response.data
-          .filter(vendor =>
-            vendor.name.toLowerCase().includes(query.toLowerCase())
-          )
-          .map(vendor => ({
-            id: vendor.id, 
-            name: vendor.name
-          }));
-        setVendorSuggestions(filtered);
-      }
+      const response = await axios.get(`http://localhost:8081/api/vendors/fetch`);
+      const filtered = response.data
+        .filter(vendor =>
+          vendor.name.toLowerCase().includes(query.toLowerCase())
+        )
+        .map(vendor => ({
+          id: vendor.id, 
+          name: vendor.name
+        }));
+      setVendorSuggestions(filtered);
     } catch (error) {
       console.error("Error fetching vendors:", error);
     }
@@ -128,48 +91,34 @@ const App = () => {
     }
 
     try {
-      // Use cached data if available
-      if (Object.keys(customersCache).length > 0) {
-        const filtered = Object.values(customersCache)
-          .filter(customer => 
-            customer.name.toLowerCase().includes(query.toLowerCase())
-          )
-          .map(customer => ({
-            id: customer.id, 
-            name: customer.name
-          }));
-        setCustomerSuggestions(filtered);
-      } else {
-        // Fallback to API if cache is empty
-        const response = await axios.get("http://localhost:8080/api/customers");
-        const filtered = response.data
-          .filter(customer =>
-            customer.name.toLowerCase().includes(query.toLowerCase())
-          )
-          .map(customer => ({
-            id: customer.id, 
-            name: customer.name
-          }));
-        setCustomerSuggestions(filtered);
-      }
+      const response = await axios.get("http://localhost:8081/api/customers/fectch");
+      const filtered = response.data
+        .filter(customer =>
+          customer.name.toLowerCase().includes(query.toLowerCase())
+        )
+        .map(customer => ({
+          id: customer.id, 
+          name: customer.name
+        }));
+      setCustomerSuggestions(filtered);
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
   };
 
-  const fetchVendorLogo = async (vendorId) => {
-    if (!vendorId) {
+  const fetchVendorLogo = async (vendor) => {
+    if (!vendor) {
       console.error("No vendor ID provided to fetch logo");
       return null;
     }
     
     try {
-      const response = await axios.get(`http://localhost:8080/api/vendors/${vendorId}/image`, {
+      const response = await axios.get(`http://localhost:8081/api/vendors/${vendor}/image`, {
         responseType: "blob"
       });
       
       if (response.data.size === 0) {
-        console.warn("Empty logo data received for vendor ID:", vendorId);
+        console.warn("Empty logo data received for vendor ID:", vendor);
         return null;
       }
   
@@ -177,7 +126,7 @@ const App = () => {
       setVendorLogo(logoUrl);  // Keep this for other parts of the app
       return logoUrl;  // Return the URL
     } catch (error) {
-      console.error(`Error fetching vendor logo for ID ${vendorId}:`, error);
+      console.error(`Error fetching vendor logo for ID ${vendor}:`, error);
       return null;
     }
   };
@@ -196,7 +145,7 @@ const App = () => {
   const selectVendor = async (vendor) => {
     setBill({ 
       ...bill, 
-      vendorId: vendor.id, 
+      vendor: vendor.id, 
       vendorName: vendor.name
     });
     setVendorSuggestions([]);
@@ -206,7 +155,7 @@ const App = () => {
   const selectCustomer = (customer) => {
     setBill({ 
       ...bill, 
-      customerId: customer.id, 
+      customer: customer.id, 
       customerName: customer.name 
     });
     setCustomerSuggestions([]);
@@ -224,7 +173,7 @@ const App = () => {
       ...bill,
       billItems: [
         ...bill.billItems,
-        { description: "", hsnSac: "", quantity: "", rate: "", sgstRate: "", cgstRate: "", igstRate: "" },
+        { description: "", hsnSac: "", quantity: "", rate: "", sgstRate: "0", cgstRate: "0", igstRate: "0" },
       ],
     });
   };
@@ -235,7 +184,6 @@ const App = () => {
     setBill({ ...bill, billItems: items });
   };
 
-  // Calculate amounts and return a new bill object with totals and updated items
   const getCalculatedBill = () => {
     let totalAmount = 0;
     let totalQuantity = 0;
@@ -247,14 +195,14 @@ const App = () => {
       const igstRate = parseFloat(item.igstRate/100 || "0");
 
       const baseAmount = quantity * rate;
-      const sgstAmount = baseAmount * (sgstRate/100);
-      const cgstAmount = baseAmount * (cgstRate/100);
-      const igstAmount = baseAmount * (igstRate/100);
+      const sgstAmount = baseAmount * (sgstRate);
+      const cgstAmount = baseAmount * (cgstRate);
+      const igstAmount = baseAmount * (igstRate);
       const itemTotal = baseAmount + sgstAmount + cgstAmount + igstAmount;
 
       totalQuantity += quantity;
       totalAmount += itemTotal;
-      
+
       return { 
         ...item, 
         sgstAmount, 
@@ -269,10 +217,29 @@ const App = () => {
   const saveBill = async () => {
     try {
       const calculatedBill = getCalculatedBill();
-      await axios.post("http://localhost:8080/api/bills", calculatedBill);
+      const billToSave = {
+        ...calculatedBill,
+        vendor: bill.vendor,  // Explicitly include vendor ID
+        customer: bill.customer,  // Explicitly include customer ID
+        vendorName: bill.vendorName,
+        customerName: bill.customerName
+      };
+      
+      await axios.post("http://localhost:8081/api/GSTbills", billToSave);
       fetchBills();
       // Reset the bill form to the initial state after saving
-      setBill(initialBillState);
+      setBill({
+        ...initialBillState,
+        billItems: [{
+          description: "", 
+          hsnSac: "", 
+          quantity: "", 
+          rate: "", 
+          sgstRate: "", 
+          cgstRate: "", 
+          igstRate: ""
+        }]
+      });
       alert("Bill saved successfully!");
     } catch (error) {
       console.error("Error saving bill:", error);
@@ -283,7 +250,7 @@ const App = () => {
   const deleteBill = async (id) => {
     if (window.confirm("Are you sure you want to delete this bill?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/bills/${id}`);
+        await axios.delete(`http://localhost:8081/api/GSTbills/${id}`);
         fetchBills();
         alert("Bill deleted successfully!");
       } catch (error) {
@@ -297,80 +264,106 @@ const App = () => {
 
   // Function to Generate PDF
   const handleViewPDF = async (bill) => {
+    console.log("Received Bill Object:", bill);
+    
+   
+       
+
     try {
-      // Fetch vendor details
-      const vendorResponse = await axios.get(`http://localhost:8080/api/vendors?name=${bill.vendorName}`);
-      const vendor = vendorResponse.data;
+        // Fetch vendor details
+        const vendorResponse = await axios.get(`http://localhost:8081/api/vendors/${bill.vendor}`);
+        const vendor = vendorResponse.data || {};
 
+        // Fetch customer details
+        const customerResponse = await axios.get(`http://localhost:8081/api/customers/${bill.customer}`);
+        const customer = customerResponse.data || {};
 
-      // Fetch customer details
-      const customerResponse = await axios.get(`http://localhost:8080/api/customers?name=${bill.customerName}`);
-      const customer = customerResponse.data
-      // Fetch the vendor logo
-      const logoUrl = await fetchVendorLogo(vendor.id);
+        // Fetch vendor logo
+        const logoUrl = await fetchVendorLogo(bill.vendor);
 
-      // Prepare the invoice data
-      const invoiceData = {
-        invoiceNumber: bill.billNumber,
-        invoiceDate: bill.billDate || new Date().toLocaleDateString(),
-        company: {
-          name: vendor.name || "Company Name",
-          gstin: vendor.gstNumber || "GSTIN",
-          address: vendor.address || "Vendor Address",
-          state: vendor.state || "State",
-          country: vendor.country || "Country",
-        },
-        client: {
-          name: customer.name || "Customer Name",
-          gstin: customer.gstNumber || "Customer GSTIN",
-          address: customer.address || "Customer Address",
-          city: customer.city || "City",
-          state: customer.state || "State",
-          country: customer.country || "Country",
-        },
-        items: bill.billItems.map((item) => {
-          const quantity = parseFloat(item.quantity) || 0;
-          const rate = parseFloat(item.rate) || 0;
-          const amount = quantity * rate;
-      
-          return {
-              description: item.description,
-              hsnSac: item.hsnSac,
-              quantity,
-              rate,
-              sgst: (parseFloat(item.sgstRate) || 0) * amount / 100,
-              cgst: (parseFloat(item.cgstRate) || 0) * amount / 100,
-              igst: (parseFloat(item.igstRate) || 0) * amount / 100,
-              amount,
-          };
-      }),
-      
-        notes: "Thank you for your business!",
-      };
+        // Prepare the invoice data
+        const invoiceData = {
+            invoiceNumber: bill.billNumber?.toString() || "N/A",
+            invoiceDate: bill.billDate || new Date().toLocaleDateString(),
+            company: {
+                name: vendor.name || "Company Name",
+                gstin: vendor.gstNumber || "GSTIN",
+                address: vendor.address || "Vendor Address",
+                state: vendor.state || "State",
+                country: vendor.country || "Country",
+            },
+            client: {
+                name: customer.name || "Customer Name",
+                gstin: customer.gstNumber || "Customer GSTIN",
+                address: customer.address || "Customer Address",
+                city: customer.city || "City",
+                state: customer.state || "State",
+                country: customer.country || "Country",
+            },
+            items: bill.billItems.map((item) => {
+                if (!item) return {}; // Avoid undefined errors for individual items
+                
+                const quantity = parseFloat(item.quantity) || 0;
+                const rate = parseFloat(item.rate) || 0;
+                const amount = quantity * rate;
 
-      // Generate and open the PDF
-      const blob = await pdf(<GSTInvoice invoice={invoiceData} vendorLogo={logoUrl} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-  
-    }  catch (error) {
-      console.error("Error generating PDF:", error);
+                return {
+                    description: item.description || "Item Description",
+                    hsnSac: item.hsnSac || "",
+                    quantity,
+                    rate,
+                    sgst: parseFloat(item.sgstRate) || 0,
+                    cgst: parseFloat(item.cgstRate) || 0,
+                    igst: parseFloat(item.igstRate) || 0,
+                    amount,
+                };
+            }),
+            notes: "Thank you for your business!",
+            totalAmount: bill.totalAmount || 0,
+        };
+
+        // Generate PDF blob
+        const pdfBlob = await pdf(<GSTInvoice invoice={invoiceData} vendorLogo={logoUrl} />).toBlob();
+        
+        // Create a URL for the blob
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        // Open PDF in a new window
+        const pdfWindow = window.open(pdfUrl, '_blank');
+        if (!pdfWindow) {
+            alert("Popup blocked. Please allow popups for this site to view the PDF.");
+        }
+
+        // Clean up the object URL after a short delay
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 30000);
+
+    } catch (error) {
+        console.error("Error generating PDF:", error);
+
+        if (error.response) {
+            alert(`Error: ${error.response.status} - ${error.response.data.message || 'Failed to generate PDF'}`);
+        } else if (error.request) {
+            alert("No response received from server. Please check your network connection.");
+        } else {
+            alert("An unexpected error occurred while generating the PDF.");
+        }
     }
-  };
+};
+
+
   
   const handlePending = async (id) => {
     if (window.confirm("Are you sure you want to mark this bill as PAID?")) {
       try {
         // Fetch the current bill details
-        const response = await axios.get(`http://localhost:8080/api/bills/${id}`);
+        const response = await axios.get(`http://localhost:8081/api/GSTbills/${id}`);
         const bill = response.data;
   
         // Update the bill status to PAID
         const updatedBill = { ...bill, paymentStatus: "PAID" };
   
         // Send the updated bill back to the server
-        await axios.put(`http://localhost:8080/api/bills/${id}`, updatedBill);
+        await axios.put(`http://localhost:8081/api/GSTbills/${id}`, updatedBill);
   
         alert("Bill marked as PAID successfully!");
         fetchBills();  // Refresh the list after the update
@@ -558,7 +551,7 @@ const App = () => {
                 <th className="p-2 border">Vendor</th>
                 <th className="p-2 border">Customer</th>
                 <th className="p-2 border">Status</th>
-                <th className="p-2 border">Items</th>
+                <th className="p-2 border">Date</th>
                 <th className="p-2 border">Total</th>
                 <th className="p-2 border">Actions</th>
               </tr>
@@ -577,7 +570,7 @@ const App = () => {
                     <td className={`p-2 border ${b.paymentStatus === "PAID" ? "text-green-600 font-medium" : "text-red-500"}`}>
                       {b.paymentStatus}
                     </td>
-                    <td className="p-2 border text-center">{(b.billItems && b.billItems.length) || 0}</td>
+                    <td className="p-2 border">{b.billDate}</td>
                     <td className="p-2 border text-right">₹{(b.totalAmount || 0).toFixed(2)}</td>
                     <td className="p-2 border">
                       <div className="flex space-x-3">
@@ -612,6 +605,23 @@ const App = () => {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="flex justify-between my-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+          disabled={currentPage === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="self-center text-lg">Page {currentPage + 1} of {totalPages}</span>
+        <button
+          onClick={() => setCurrentPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+          disabled={currentPage + 1 >= totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

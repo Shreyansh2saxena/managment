@@ -13,23 +13,30 @@ const CustomerForm = () => {
   const [customers, setCustomers] = useState([]);
   const [editId, setEditId] = useState(null);
   const [searchId, setSearchId] = useState("");
+   const [currentPage, setCurrentPage] = useState(0);
+    const cusPerPage = 10;
+    const [totalPages, setTotalPages] = useState(1);
+  
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [currentPage]);
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/customers");
-      if (response.ok) {
-        const data = await response.json();
-        setCustomers(data);
-      }
+      const response = await fetch(`http://localhost:8081/api/customers?page=${currentPage}&size=${cusPerPage}`);
+      
+  
+      const data = await response.json();
+      setCustomers(Array.isArray(data.content) ? data.content : []); // Extract customers from content array
+      setTotalPages(data.totalPages ?? 1);
     } catch (error) {
       console.error("Error fetching customers:", error);
+      setCustomers([]);
+      setTotalPages(1);
     }
   };
-
+  
   const handleChange = (e) => {
     setCustomer({ ...customer, [e.target.name]: e.target.value });
   };
@@ -39,8 +46,8 @@ const CustomerForm = () => {
     try {
       const method = editId ? "PUT" : "POST";
       const url = editId
-        ? `http://localhost:8080/api/customers/${editId}`
-        : "http://localhost:8080/api/customers";
+        ? `http://localhost:8081/api/customers/${editId}`
+        : "http://localhost:8081/api/customers";
 
       const response = await fetch(url, {
         method,
@@ -63,7 +70,7 @@ const CustomerForm = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:8080/api/customers/${id}`, { method: "DELETE" });
+      await fetch(`http://localhost:8081/api/customers/${id}`, { method: "DELETE" });
       alert("Customer deleted successfully");
       fetchCustomers();
     } catch (error) {
@@ -78,7 +85,7 @@ const CustomerForm = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/customers/${searchId}`);
+      const response = await fetch(`http://localhost:8081/api/customers/${searchId}`);
       if (response.ok) {
         const data = await response.json();
         setCustomers([data]);
@@ -139,6 +146,26 @@ const CustomerForm = () => {
           </tbody>
         </table>
       </div>
+      <div className="flex justify-between items-center my-4">
+  <button
+    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+    disabled={currentPage === 0}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Previous
+  </button>
+
+  <span className="text-lg">Page {currentPage + 1} of {totalPages}</span>
+
+  <button
+    onClick={() => setCurrentPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+    disabled={currentPage + 1 >= totalPages}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+</div>
+
     </div>
   );
 };

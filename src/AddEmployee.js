@@ -17,7 +17,7 @@ const AddEmployee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/api/employees", employee);
+      await axios.post("http://localhost:8081/api/employees", employee);
       alert("Employee added successfully!");
       setEmployee({
         employeeName: "",

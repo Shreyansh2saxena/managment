@@ -7,26 +7,30 @@ const ViewIssuedDocs = () => {
   const [loading, setLoading] = useState(true);
   const [searchEmployeeId, setSearchEmployeeId] = useState("");
   const [searchDocType, setSearchDocType] = useState("");
-
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
   // Fetch documents
   useEffect(() => {
+    setLoading(true);
     axios
-      .get("http://localhost:8080/api/issued-docs")
+      .get(`http://localhost:8081/api/issued-docs?page=${page}&size=${pageSize}`)
       .then((response) => {
-        setDocs(response.data);
+        setDocs(response.data.content);
+        setTotalPages(response.data.totalPages);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching documents:", error);
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   // Delete Document
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/issued-docs/${id}`);
+        await axios.delete(`http://localhost:8081/api/issued-docs/${id}`);
         setDocs((prevDocs) => prevDocs.filter((doc) => doc.id !== id));
         alert("Document deleted successfully!");
       } catch (error) {
@@ -40,7 +44,7 @@ const ViewIssuedDocs = () => {
   const handleView = async (doc) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/issued-docs/view/${doc.id}`,
+        `http://localhost:8081/api/issued-docs/view/${doc.id}`,
         { responseType: "blob" }
       );
       const fileBlob = new Blob([response.data], { type: "application/pdf" });
@@ -141,7 +145,25 @@ const ViewIssuedDocs = () => {
             </table>
           </div>
         )}
+        <div className="flex justify-between my-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+          disabled={page === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="self-center text-lg">Page {page + 1} of {totalPages}</span>
+        <button
+          onClick={() => setPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+          disabled={page + 1 >= totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
+      </div>
+        
     </div>
   );
 };
