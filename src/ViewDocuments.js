@@ -24,6 +24,7 @@ const GetDocumentsByEmployee = () => {
             axios.get(`http://localhost:8081/api/employees?page=${page}&size=${size}`),
           ]);
           
+          
           setAllDocuments(docResponse.data.content || []);
           setFilteredDocuments(docResponse.data.content || []);
           setEmployees(empResponse.data.content || []);
@@ -181,22 +182,32 @@ const GetDocumentsByEmployee = () => {
               <tr>
                 <th className="border p-3 text-left">Document ID</th>
                 <th className="border p-3 text-left">Employee ID</th>
+                <th className="border p-3 text-left">Employee Name</th>
+                <th className="border p-3 text-left">Role</th>
                 <th className="border p-3 text-left">File Name</th>
                 <th className="border p-3 text-left">Type</th>
                 <th className="border p-3 text-left">Created Date</th>
               </tr>
             </thead>
             <tbody>
-              {filteredDocuments.map((doc) => (
-                <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="border p-3">{doc.id}</td>
-                  <td className="border p-3">{doc.employeeId}</td>
-                  <td className="border p-3">{doc.fileName}</td>
-                  <td className="border p-3">{doc.typeOfDoc}</td>
-                  <td className="border p-3">{doc.createdDate}</td>
-                </tr>
-              ))}
-            </tbody>
+  {filteredDocuments.map((doc) => {
+    // Find the corresponding employee data
+    const employee = employees.find(emp => emp.employeeId === doc.employeeId);
+
+    return (
+      <tr key={doc.id} className="hover:bg-gray-50">
+        <td className="border p-3">{doc.id}</td>
+        <td className="border p-3">{doc.employeeId}</td>
+        <td className="border p-3">{employee ? employee.employeeName : "N/A"}</td>
+        <td className="border p-3">{employee ? employee.role : "N/A"}</td>
+        <td className="border p-3">{doc.fileName}</td>
+        <td className="border p-3">{doc.typeOfDoc || "N/A"}</td>
+        <td className="border p-3">{doc.createdDate}</td>
+      </tr>
+    );
+  })}
+</tbody>
+
           </table>
         </div>
       )}

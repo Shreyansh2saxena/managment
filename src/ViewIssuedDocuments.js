@@ -14,7 +14,7 @@ const ViewIssuedDocs = () => {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`http://localhost:8081/api/issued-docs?page=${page}&size=${pageSize}`)
+      .get(`http://localhost:8081/api/issued-docs/getall?page=${page}&size=${pageSize}`)
       .then((response) => {
         setDocs(response.data.content);
         setTotalPages(response.data.totalPages);
@@ -104,6 +104,8 @@ const ViewIssuedDocs = () => {
               <thead className="bg-blue-600 text-white">
                 <tr>
                   <th className="p-3">Employee ID</th>
+                  <th className="p-3">Employee Name</th>
+                  <th className="p-3">Role</th>
                   <th className="p-3">Document Type</th>
                   <th className="p-3">Issued By</th>
                   <th className="p-3">Issued Date</th>
@@ -115,6 +117,8 @@ const ViewIssuedDocs = () => {
                   filteredDocs.map((doc) => (
                     <tr key={doc.id} className="border-t">
                       <td className="p-3">{doc.employeeId}</td>
+                      <td className="p-3">{doc.employeeName}</td>
+                      <td className="p-3">{doc.role}</td>
                       <td className="p-3">{doc.typeOfDoc}</td>
                       <td className="p-3">{doc.issuedBy}</td>
                       <td className="p-3">{doc.dateOfIssue}</td>

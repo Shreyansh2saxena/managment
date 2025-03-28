@@ -15,14 +15,23 @@ const AddDocumentForm = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/employees");
-        setEmployeeList(response.data);
+        const response = await axios.get("http://localhost:8081/api/employees/getall");
+        console.log("Fetched Employees:", response.data);
+        
+        // Validate employee data structure
+        const validEmployees = response.data.filter(
+          emp => emp.employeeName && emp.employeeId
+        );
+        
+        setEmployeeList(validEmployees);
       } catch (error) {
         console.error("Error fetching employees:", error);
+        setMessage("Could not load employee list");
       }
     };
     fetchEmployees();
   }, []);
+;
 
   // Handle employee name input change
   const handleEmployeeNameChange = (e) => {
@@ -69,7 +78,7 @@ const AddDocumentForm = () => {
 
     try {
       await axios.post(
-        "http://localhost:8080/api/documents/upload",
+        "http://localhost:8081/api/documents/upload",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

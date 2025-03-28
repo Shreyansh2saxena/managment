@@ -21,7 +21,7 @@ const AddIssuedDoc = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/employees");
+        const response = await axios.get("http://localhost:8081/api/employees/getall");
         setEmployeeList(response.data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -72,7 +72,7 @@ const AddIssuedDoc = () => {
     try {
       // Validate if employee ID exists
       const response = await axios.get(
-        `http://localhost:8080/api/employees/${formData.employeeId}`
+        `http://localhost:8081/api/employees/${formData.employeeId}`
       );
 
       if (!response.data) {
@@ -88,7 +88,7 @@ const AddIssuedDoc = () => {
       formDataObj.append("issuedBy", formData.issuedBy);
       formDataObj.append("file", formData.file);
 
-      await axios.post("http://localhost:8080/api/issued-docs", formDataObj, {
+      await axios.post("http://localhost:8081/api/issued-docs", formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

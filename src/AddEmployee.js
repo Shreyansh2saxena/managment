@@ -7,6 +7,11 @@ const AddEmployee = () => {
     address: "",
     phone: "",
     email: "",
+    ifsc : '',
+    AccountNo :"",
+    bankName: "",
+    bankingEmpName: "",
+
     role: "Employee",
   });
 
@@ -24,6 +29,10 @@ const AddEmployee = () => {
         address: "",
         phone: "",
         email: "",
+        bankName: "",
+        ifsc: "",
+        AccountNo: "",
+        bankingEmpName: "",
         role: "Employee",
       });
     } catch (error) {
@@ -87,6 +96,50 @@ const AddEmployee = () => {
               type="email"
               name="email"
               value={employee.email}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Bank Name</label>
+            <input
+              type="bankName"
+              name="bankName"
+              value={employee.bankName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">IFSC code</label>
+            <input
+              type="ifsc"
+              name="ifsc"
+              value={employee.ifsc}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Employee's Banking Name</label>
+            <input
+              type="bankingEmpName"
+              name="bankingEmpName"
+              value={employee.bankingEmpName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Account Number</label>
+            <input
+              type="AccountNo"
+              name="AccountNo"
+              value={employee.AccountNo}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
