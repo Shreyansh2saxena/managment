@@ -41,7 +41,7 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
           <Link to="/" onClick={() => onNavClick("Issued Documents")} className="px-4 hover:text-gray-300">Issued Documents</Link>
           <Link to="/mails" className="px-4 hover:text-gray-300 font-semibold">Mail</Link> 
           <Link to="/" onClick={() => onNavClick("Vendor")} className="px-4 hover:text-gray-300">Vendor</Link>
-
+          <Link to="/" onClick={() => onNavClick("Attendance")} className="px-4 hover:text-gray-300">Attendance</Link>
         </div>
       )}
 
@@ -99,6 +99,72 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
             <li>
               <Link to="/mails" className="block py-2 hover:bg-gray-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>Mail</Link>
               <Link to="/Vendor" className="block py-2 hover:bg-gray-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>bill</Link>
+            </li>
+            <li>
+              <button 
+                className="w-full text-left py-2 hover:bg-gray-700" 
+                onClick={() => toggleSubMenu("Attendance")}
+              >
+                Attendance {activeMenu === "Attendance" ? "▲" : "▼"}
+              </button>
+              {activeMenu === "Attendance" && (
+                <ul className="ml-4 bg-gray-800 p-2 rounded-md">
+                  <li>
+                    <Link 
+                      to="/attendance/mark" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      Mark Attendance
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/request" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      Attendance Request
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/leave-request" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      Leave Request
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/overtime-request" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      Overtime Request
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/poh-request" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      POH Request
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/new" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      Attendance New
+                    </Link>
+                  </li>
+                </ul>
+              )}
             </li>
           </ul>
         </div>
