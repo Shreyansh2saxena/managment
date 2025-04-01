@@ -5,18 +5,19 @@ const POHRequestDashboard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [employeeIdInput, setEmployeeIdInput] = useState("");
   const [employeeNameInput, setEmployeeNameInput] = useState("");
+  const [employeeId, setEmployeeId] = useState(""); // Will hold the logged-in employeeId
+  const [employeeName, setEmployeeName] = useState(""); // Will hold the logged-in employeeName
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const employeeId = user.id || "unknown";
-  const employeeName = user.name || "";
-
+  // UseEffect will run only if employeeId is set (no array size change)
   useEffect(() => {
-    fetchPOHRequests();
-  }, []);
+    if (employeeId) {
+      fetchPOHRequests();
+    }
+  }, [employeeId]); // Dependency on employeeId
 
   const fetchPOHRequests = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/poh/employee/${employeeId}`);
+      const response = await fetch(`http://localhost:8081/poh/employee/${employeeId}`);
       if (!response.ok) throw new Error("Failed to fetch POH requests");
 
       const data = await response.json();
@@ -28,15 +29,16 @@ const POHRequestDashboard = () => {
 
   const handleRequestPOH = async () => {
     try {
+      // Submit POH request, employeeIdInput is used if the employeeId is not available
       const response = await fetch(
-        `http://localhost:8080/poh/save?employeeId=${employeeIdInput || employeeId}&employeeName=${encodeURIComponent(employeeNameInput || employeeName)}&date=${selectedDate}`,
+        `http://localhost:8081/poh/save?employeeId=${employeeIdInput || employeeId}&date=${selectedDate}`,
         { method: "POST" }
       );
 
       if (!response.ok) throw new Error("Failed to request POH");
 
       alert("✅ POH request submitted successfully!");
-      fetchPOHRequests();
+      fetchPOHRequests(); // Fetch the updated POH requests list
       setSelectedDate(new Date().toISOString().split("T")[0]);
       setEmployeeIdInput("");
       setEmployeeNameInput("");
@@ -116,13 +118,12 @@ const POHRequestDashboard = () => {
                     <td className="py-4 px-6">{new Date(poh.date).toLocaleDateString()}</td>
                     <td className="py-4 px-6">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          poh.status === "Approved"
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${poh.status === "Approved"
                             ? "bg-green-100 text-green-600"
                             : poh.status === "Pending"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-red-100 text-red-600"
-                        }`}
+                              ? "bg-yellow-100 text-yellow-600"
+                              : "bg-red-100 text-red-600"
+                          }`}
                       >
                         {poh.status}
                       </span>

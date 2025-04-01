@@ -7,75 +7,70 @@ const OvertimeRequestDashboard = () => {
   const [employeeIdInput, setEmployeeIdInput] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [reason, setReason] = useState("");
-
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const storedEmployeeId = user.id || "";
-  const storedEmployeeName = user.name || "";
+  const [page, setPage] = useState(0);
+  const [totPage, settotpage] = useState(1);
+  const [size] = useState(10);
 
   useEffect(() => {
-    setEmployeeIdInput(storedEmployeeId);
-    setEmployeeName(storedEmployeeName);
-  }, [storedEmployeeId, storedEmployeeName]);
+    fetchUserDetails();
+  }, []);
 
   useEffect(() => {
     if (employeeIdInput) {
       fetchOvertimeRequests();
     }
-  }, [employeeIdInput]);
+  }, [employeeIdInput, page]);
+
+  const fetchUserDetails = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/user/me", {
+        credentials: "include", // Ensure cookies or authentication headers are sent
+      });
+      if (!response.ok) throw new Error("Failed to fetch user details");
+
+      const user = await response.json();
+      setEmployeeIdInput(user.id || "");
+      setEmployeeName(user.name || "");
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
 
   const fetchOvertimeRequests = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/overtime/employee/${employeeIdInput}`);
+      const response = await fetch(`http://localhost:8080/overtime/employee/${employeeIdInput}?page=${page}&size=${size}`);
       if (!response.ok) throw new Error("Failed to fetch overtime requests");
-
-      const data = await response.json();
-      const formattedData = data.map((overtime) => ({
+      
+      const { content, totalPages } = await response.json();
+      setOvertimeRequests(content.map((overtime) => ({
         ...overtime,
         date: new Date(overtime.date).toLocaleDateString(),
-      }));
-
-      setOvertimeRequests(formattedData);
+      })));
+      settotpage(totalPages);
     } catch (error) {
       console.error("Error fetching overtime requests:", error);
     }
   };
 
   const handleRequestOvertime = async () => {
-    if (!employeeIdInput.trim()) {
-      alert("❌ Please enter an Employee ID.");
-      return;
-    }
-
-    if (!employeeName.trim()) {
-      alert("❌ Please enter an Employee Name.");
-      return;
-    }
-
-    if (!overtimeHours || overtimeHours <= 0) {
-      alert("❌ Please enter valid overtime hours.");
+    if (!employeeIdInput.trim() || !employeeName.trim() || !overtimeHours || overtimeHours <= 0) {
+      alert("❌ Please fill in all required fields correctly.");
       return;
     }
 
     try {
-      const overtimeData = {
-        employeeId: employeeIdInput,
-        employeeName: employeeName,
-        date: selectedDate,
-        hours: overtimeHours,
-        reason: reason,
-        status: "Pending"
-      };
-
-      const response = await fetch(
-        "http://localhost:8080/overtime/add",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(overtimeData)
-        }
-      );
+      const response = await fetch("http://localhost:8080/overtime/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          employeeId: employeeIdInput,
+          employeeName,
+          date: selectedDate,
+          hours: overtimeHours,
+          reason,
+          status: "Pending",
+        }),
+      });
 
       if (!response.ok) throw new Error("Failed to request overtime");
 
@@ -83,7 +78,7 @@ const OvertimeRequestDashboard = () => {
       fetchOvertimeRequests();
       resetForm();
     } catch (error) {
-      alert("❌ Error submitting overtime request: " + error.message);
+      alert(" Error submitting overtime request: " + error.message);
     }
   };
 
@@ -212,7 +207,27 @@ const OvertimeRequestDashboard = () => {
             </tbody>
           </table>
         </div>
+        <div className="flex justify-between items-center my-4">
+  <button
+    onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+    disabled={page === 0}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Previous
+  </button>
+
+  <span className="text-lg">Page {page + 1} of {totPage}</span>
+
+  <button
+    onClick={() => setPage((prev) => (prev + 1 < totPage ? prev + 1 : prev))}
+    disabled={page + 1 >= totPage}
+    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+  >
+    Next
+  </button>
+</div>
       </div>
+     
     </div>
   );
 };

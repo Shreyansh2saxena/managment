@@ -7,12 +7,25 @@ const AttendanceRequestForm = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user")) || {};
-    setEmployee({
-      id: storedUser.id || "",
-      name: storedUser.name || "",
-      email: storedUser.email || "",
-    });
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/employee/details");
+        if (response.ok) {
+          const data = await response.json();
+          setEmployee({
+            id: data.id || "",
+            name: data.name || "",
+            email: data.email || "",
+          });
+        } else {
+          console.error("Failed to fetch employee details");
+        }
+      } catch (error) {
+        console.error("Error fetching employee details:", error);
+      }
+    };
+
+    fetchEmployeeData();
   }, []);
 
   const formatTimeToISO = (time) => {

@@ -1,272 +1,215 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const MarkAttendance = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [punchInTime, setPunchInTime] = useState(null);
-  const [punchOutTime, setPunchOutTime] = useState(null);
-  const [attendanceLogs, setAttendanceLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [effectiveHours, setEffectiveHours] = useState("0h 0m 0s");
+const AttendancePage = () => {
   const [employeeId, setEmployeeId] = useState("");
   const [employeeName, setEmployeeName] = useState("");
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchEmployeeDetails();
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    fetchAttendanceData();
-    fetchAttendanceLogs();
+    fetchAttendanceRecords();
   }, [selectedMonth]);
 
-  useEffect(() => {
-    if (punchInTime && !punchOutTime) {
-      const interval = setInterval(() => {
-        setEffectiveHours(calculateEffectiveHours(punchInTime, new Date()));
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [punchInTime, punchOutTime]);
-
-  const fetchEmployeeDetails = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/employee/me"); // Replace with actual API endpoint
-      if (!response.ok) throw new Error("Failed to fetch employee details");
-
-      const data = await response.json();
-      setEmployeeId(data.id);
-      setEmployeeName(data.name);
-    } catch (error) {
-      console.error("Error fetching employee details:", error);
-    }
-  };
-
-  const fetchAttendanceData = async () => {
+  // Fetch attendance records based on selected month
+  const fetchAttendanceRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8080/attendance/all`);
-      if (!response.ok) throw new Error("Failed to fetch attendance data");
-
-      const data = await response.json();
-      if (data?.checkInTime) {
-        setPunchInTime(new Date(`${data.date}T${data.checkInTime}`));
-        if (data.checkOutTime) {
-          setPunchOutTime(new Date(`${data.date}T${data.checkOutTime}`));
-        }
-      }
+      const response = await axios.get(`http://localhost:8081/attendance/all?month=${selectedMonth}`);
+      setAttendanceRecords(response.data);
+      setError("");
     } catch (error) {
-      console.error("Error fetching attendance data:", error);
+      console.error("Error fetching attendance records", error);
+      setError("Failed to load attendance records");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAttendanceLogs = async () => {
-    try {
-      const response = await fetch(`http://localhost:8080/attendance/all`);
-      if (!response.ok) throw new Error("Failed to fetch attendance logs");
+  // Fetch employee name whenever employeeId changes
+  useEffect(() => {
+    if (employeeId.trim()) {
+      fetchEmployeeName(employeeId);
+    } else {
+      setEmployeeName("");
+    }
+  }, [employeeId]);
 
-      const logs = await response.json();
-      const formattedLogs = logs.map((log) => ({
-        ...log,
-        checkInTime: log.checkInTime ? new Date(`${log.date}T${log.checkInTime}`) : null,
-        checkOutTime: log.checkOutTime ? new Date(`${log.date}T${log.checkOutTime}`) : null,
-      }));
-      setAttendanceLogs(formattedLogs);
+  const fetchEmployeeName = async (id) => {
+    if (!id || id.trim() === "") return;
+    
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8081/api/employees/${id}`);
+      if (response.data && response.data.name) {
+        setEmployeeName(response.data.name);
+        setError("");
+      } else {
+        setEmployeeName("");
+        setError("Employee not found");
+      }
     } catch (error) {
-      console.error("Error fetching logs:", error);
+      console.error("Error fetching employee name", error);
+      setEmployeeName("");
+      setError("Employee not found");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePunchIn = async () => {
-    if (!employeeId.trim()) {
-      alert("Please enter an Employee ID");
+  const handleCheckIn = async () => {
+    if (!employeeId || !employeeName) {
+      setError("Please enter a valid Employee ID");
       return;
     }
-
+    
+    setLoading(true);
     try {
-      setPunchInTime(new Date());
-      const url = `http://localhost:8080/attendance/checkin/${employeeId}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeName }),
-      });
-
-      if (!response.ok) throw new Error("Failed to punch in");
-      alert("✅ Punched In Successfully");
-      fetchAttendanceData();
+      await axios.post(`http://localhost:8081/attendance/checkin/${employeeId}`);
+      setError("");
+      // Refresh attendance records after successful check-in
+      await fetchAttendanceRecords();
     } catch (error) {
-      alert(`❌ Error: ${error.message}`);
+      console.error("Check-in failed", error);
+      setError("Check-in failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePunchOut = async () => {
-    if (!employeeId.trim()) {
-      alert("Please enter an Employee ID");
+  const handleCheckOut = async () => {
+    if (!employeeId || !employeeName) {
+      setError("Please enter a valid Employee ID");
       return;
     }
-
-    if (!punchInTime) {
-      alert("You must punch in before punching out");
-      return;
-    }
-
+    
+    setLoading(true);
     try {
-      setPunchOutTime(new Date());
-      const url = `http://localhost:8080/attendance/checkout/${employeeId}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeName }),
-      });
-
-      if (!response.ok) throw new Error("Failed to punch out");
-      alert(" Punched Out Successfully");
-      fetchAttendanceData();
+      await axios.post(`http://localhost:8081/attendance/checkout/${employeeId}`);
+      setError("");
+      // Refresh attendance records after successful check-out
+      await fetchAttendanceRecords();
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      console.error("Check-out failed", error);
+      setError("Check-out failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const calculateEffectiveHours = (inTime, outTime) => {
-    if (!inTime) return "0h 0m 0s";
-    const diff = Math.max((outTime - inTime) / 1000, 0);
-    const hours = Math.floor(diff / 3600);
-    const minutes = Math.floor((diff % 3600) / 60);
-    const seconds = Math.floor(diff % 60);
-    return `${hours}h ${minutes}m ${seconds}s`;
+  const handleEmployeeIdChange = (e) => {
+    setEmployeeId(e.target.value);
   };
-
-  if (loading) return <p className="text-center mt-10 text-lg">Loading attendance data...</p>;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-5xl mx-auto">
-        <h2 className="text-2xl font-semibold text-center mb-4">Mark Attendance</h2>
-        <p className="text-gray-600 text-center">Date: {currentTime.toLocaleDateString()}</p>
-        <p className="text-gray-600 text-center">Time: {currentTime.toLocaleTimeString()}</p>
-    
-        {punchInTime && (
-          <p className="text-blue-600 font-semibold text-center mt-2">
-            Effective Hours: {effectiveHours}
-          </p>
+    <div className="p-8 max-w-5xl mx-auto bg-gray-100 min-h-screen">
+      <div className="bg-white shadow-xl rounded-lg p-8">
+        <h2 className="text-3xl font-bold text-center text-gray-700 mb-6">Employee Attendance</h2>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
         )}
-
-        <div className="mt-4 flex flex-col items-center">
-          <div className="w-full max-w-md">
-            <div className="mb-4">
-              <label className="block font-semibold text-gray-700 mb-2">Employee ID:</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded-full"
-                placeholder="Enter Employee ID"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
-               
-              />
-            </div>
+        
+        <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
+          <div className="w-full md:w-1/3">
+            <label className="block text-gray-700 font-semibold mb-2">Employee ID</label>
+            <input
+              type="text"
+              placeholder="Enter Employee ID"
+              value={employeeId}
+              onChange={handleEmployeeIdChange}
+              className="border p-3 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+          
+          <div className="w-full md:w-1/3">
+            <label className="block text-gray-700 font-semibold mb-2">Employee Name</label>
+            <input
+              type="text"
+              placeholder="Employee Name"
+              value={employeeName}
+              readOnly
+              className="border p-3 rounded-lg w-full bg-gray-100 shadow-sm"
+            />
+          </div>
+          
+          <div className="w-full md:w-1/3 flex gap-2 mt-6">
+            <button
+              onClick={handleCheckIn}
+              disabled={loading || !employeeName}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold w-full px-2 py-3 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Processing..." : "Check In"}
+            </button>
             
-            <div className="mb-4">
-              <label className="block font-semibold text-gray-700 mb-2">Employee Name:</label>
-              <input
-                type="text"
-                className="w-full p-2 border border-gray-300 rounded-full"
-                placeholder="Enter Employee Name"
-                value={employeeName}
-                onChange={(e) => setEmployeeName(e.target.value)}
-              />
-            </div>
-            
-            <div className="flex justify-center gap-4 mt-4">
-              <button
-                className={`px-4 py-2 font-semibold text-white rounded-full bg-green-500 ${
-                  punchInTime ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                onClick={handlePunchIn}
-                disabled={punchInTime}
-              >
-                Punch In
-              </button>
-
-              <button
-                className={`px-4 py-2 font-semibold text-white rounded-full bg-red-500 ${
-                  !punchInTime || punchOutTime ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                onClick={handlePunchOut}
-                disabled={!punchInTime || punchOutTime}
-              >
-                Punch Out
-              </button>
-            </div>
+            <button
+              onClick={handleCheckOut}
+              disabled={loading || !employeeName}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-semibold w-full px-2 py-3 rounded-lg shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Processing..." : "Check Out"}
+            </button>
           </div>
         </div>
-    
-        <div className="mt-6">
-          <label className="block font-semibold text-gray-700">Select Month:</label>
+        
+        <div className="mb-6">
+          <label className="block text-gray-700 font-semibold mb-2">Select Month</label>
           <select
-            className="mt-1 block w-1/6 border border-gray-300 rounded-full p-2 "
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
+            className="border p-3 rounded-lg w-full shadow-sm focus:ring-2 focus:ring-blue-300"
           >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {new Date(0, i).toLocaleString("default", { month: "long" })}
-              </option>
-            ))}
+            <option value="">All Months</option>
+            <option value="01">January</option>
+            <option value="02">February</option>
+            <option value="03">March</option>
+            <option value="04">April</option>
+            <option value="05">May</option>
+            <option value="06">June</option>
+            <option value="07">July</option>
+            <option value="08">August</option>
+            <option value="09">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
           </select>
         </div>
-    
-        <h3 className="text-lg font-semibold mt-6">Attendance Logs</h3>
-        <div className="mt-3">
-          <table className="w-full border border-gray-200 rounded-full">
-            <thead className="bg-gray-200">
-              <tr>
-                <th className="p-3 border">Employee ID</th>
-                <th className="p-3 border">Employee Name</th>
-                <th className="p-3 border">Date</th>
-                <th className="p-3 border">Punch In</th>
-                <th className="p-3 border">Punch Out</th>
-                <th className="p-3 border">Hours Worked</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendanceLogs.length > 0 ? (
-                attendanceLogs.map((log, index) => (
-                  <tr key={index} className="odd:bg-gray-100">
-                    <td className="p-3 border">{log.employeeId}</td>
-                    <td className="p-3 border">{log.employeeName || "N/A"}</td>
-                    <td className="p-3 border">{log.date}</td>
-                    <td className="p-3 border">
-                      {log.checkInTime ? log.checkInTime.toLocaleTimeString() : "-"}
-                    </td>
-                    <td className="p-3 border">
-                      {log.checkOutTime ? log.checkOutTime.toLocaleTimeString() : "-"}
-                    </td>
-                    <td className="p-3 border">
-                      {calculateEffectiveHours(log.checkInTime, log.checkOutTime)}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="p-3 border text-center text-gray-500">
-                    No attendance records found.
-                  </td>
+        
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="text-center py-4">Loading...</div>
+          ) : attendanceRecords.length > 0 ? (
+            <table className="w-full border-collapse border border-gray-300 shadow-md">
+              <thead>
+                <tr className="bg-gray-200 text-gray-700 text-lg">
+                  <th className="border p-4">ID</th>
+                  <th className="border p-4">Name</th>
+                  <th className="border p-4">Check-in Time</th>
+                  <th className="border p-4">Check-out Time</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {attendanceRecords.map((record) => (
+                  <tr key={record.id} className="text-center border hover:bg-gray-100 transition">
+                    <td className="border p-4">{record.employeeId}</td>
+                    <td className="border p-4">{record.employeeName}</td>
+                    <td className="border p-4">{record.checkInTime || "-"}</td>
+                    <td className="border p-4">{record.checkOutTime || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-4 text-gray-500">No attendance records found</div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default MarkAttendance;
+export default AttendancePage;

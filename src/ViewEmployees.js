@@ -35,7 +35,7 @@ const ViewEmployee = () => {
  
   
   const filteredEmployees = searchId
-    ? employees.filter((emp) => emp.employeeId.toString().includes(searchId))
+    ? employees.filter((emp) => emp.id.toString().includes(searchId))
     : employees;
 
     const handleDelete = async (id) => {
@@ -43,7 +43,7 @@ const ViewEmployee = () => {
         try {
           await axios.delete(`http://localhost:8081/api/employees/${id}`);
           alert("Employee deleted successfully!");
-          setEmployees(employees.filter((emp) => emp.employeeId !== id)); // Remove deleted employee
+          setEmployees(employees.filter((emp) => emp.id !== id)); // Remove deleted employee
         } catch (error) {
           console.error("Error deleting employee:", error);
         }
@@ -66,7 +66,7 @@ const ViewEmployee = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:8081/api/employees/${editEmployee.employeeId}`,
+        `http://localhost:8081/api/employees/${editEmployee.id}`,
         editEmployee,
         {
           headers: {
@@ -98,7 +98,7 @@ const ViewEmployee = () => {
 
     filteredEmployees.forEach((employee) => {
       const row = [
-        employee.employeeId,
+        employee.id,
         employee.employeeName,
         ...filterFields.map((field) => employee[field] || "")
       ];
@@ -171,8 +171,8 @@ const ViewEmployee = () => {
             </thead>
             <tbody>
               {filteredEmployees.map((employee) => (
-                <tr key={employee.employeeId} className="border-t">
-                  <td className="p-3">{employee.employeeId}</td>
+                <tr key={employee.id} className="border-t">
+                  <td className="p-3">{employee.id}</td>
                   <td className="p-3">{employee.employeeName}</td>
                   {filterFields.includes("address") && <td className="p-3">{employee.address}</td>}
                   {filterFields.includes("phone") && <td className="p-3">{employee.phone}</td>}
@@ -180,7 +180,7 @@ const ViewEmployee = () => {
                   {filterFields.includes("role") && <td className="p-3">{employee.role}</td>}
                   <td className="p-3 flex justify-center space-x-2">
                     <button
-                      onClick={() => handleDelete(employee.employeeId)}
+                      onClick={() => handleDelete(employee.id)}
                       className="p-1 text-red-500 hover:text-red-700"
                     >
                       <Delete />

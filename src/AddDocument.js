@@ -20,7 +20,7 @@ const AddDocumentForm = () => {
         
         // Validate employee data structure
         const validEmployees = response.data.filter(
-          emp => emp.employeeName && emp.employeeId
+          emp => emp.employeeName && emp.id
         );
         
         setEmployeeList(validEmployees);
@@ -52,7 +52,7 @@ const AddDocumentForm = () => {
   // Handle selecting an employee from suggestions
   const handleSelectEmployee = (employee) => {
     setEmployeeName(employee.employeeName);
-    setEmployeeId(employee.employeeId);
+    setEmployeeId(employee.id);
     setFilteredEmployees([]); // Hide suggestions after selection
   };
 
@@ -112,12 +112,12 @@ const AddDocumentForm = () => {
             <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full shadow-md">
               {filteredEmployees.map((emp) => (
                 <li
-                  key={emp.employeeId}
+                  key={emp.id}
                   className="p-2 cursor-pointer hover:bg-gray-200 flex justify-between"
                   onClick={() => handleSelectEmployee(emp)}
                 >
                   <span>{emp.employeeName}</span>
-                  <span className="text-gray-500">({emp.employeeId})</span>
+                  <span className="text-gray-500">({emp.id})</span>
                 </li>
               ))}
             </ul>

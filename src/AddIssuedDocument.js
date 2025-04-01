@@ -51,7 +51,7 @@ const AddIssuedDoc = () => {
     setFormData((prev) => ({
       ...prev,
       employeeName: employee.employeeName,
-      employeeId: employee.employeeId,
+      employeeId: employee.id,
     }));
     setFilteredEmployees([]); // Hide suggestions after selection
   };
@@ -145,12 +145,12 @@ const AddIssuedDoc = () => {
             <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full shadow-md max-h-40 overflow-y-auto">
               {filteredEmployees.map((emp) => (
                 <li
-                  key={emp.employeeId}
+                  key={emp.id}
                   className="p-2 cursor-pointer hover:bg-gray-200 flex justify-between"
                   onClick={() => handleSelectEmployee(emp)}
                 >
                   <span>{emp.employeeName}</span>
-                  <span className="text-gray-500">({emp.employeeId})</span>
+                  <span className="text-gray-500">({emp.id})</span>
                 </li>
               ))}
             </ul>

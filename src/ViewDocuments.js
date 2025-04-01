@@ -87,11 +87,11 @@ const GetDocumentsByEmployee = () => {
 
   const handleEmployeeSelection = (employee) => {
     setSelectedEmployee(employee);
-    setSearchTerm(`${employee.employeeName} (ID: ${employee.employeeId})`);
+    setSearchTerm(`${employee.employeeName} (ID: ${employee.id})`);
     setMatchedEmployees([]); // Hide suggestions
     setMatchedDocs([]); // Hide document suggestions
 
-    const filtered = allDocuments.filter((doc) => doc.employeeId === employee.employeeId);
+    const filtered = allDocuments.filter((doc) => doc.employeeId === employee.id);
     setFilteredDocuments(filtered);
     setMessage(filtered.length ? "" : "No documents found for this employee.");
   };
@@ -138,12 +138,12 @@ const GetDocumentsByEmployee = () => {
             <ul className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10">
               {matchedEmployees.map((emp) => (
                 <li
-                  key={emp.employeeId}
+                  key={emp.id}
                   onClick={() => handleEmployeeSelection(emp)}
                   className="p-2 cursor-pointer hover:bg-gray-100 flex justify-between"
                 >
                   <span>{emp.employeeName}</span>
-                  <span className="text-gray-500 text-sm">ID: {emp.employeeId}</span>
+                  <span className="text-gray-500 text-sm">ID: {emp.id}</span>
                 </li>
               ))}
             </ul>
@@ -192,7 +192,7 @@ const GetDocumentsByEmployee = () => {
             <tbody>
   {filteredDocuments.map((doc) => {
     // Find the corresponding employee data
-    const employee = employees.find(emp => emp.employeeId === doc.employeeId);
+    const employee = employees.find(emp => emp.id === doc.employeeId);
 
     return (
       <tr key={doc.id} className="hover:bg-gray-50">
