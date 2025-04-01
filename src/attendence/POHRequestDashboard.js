@@ -4,9 +4,11 @@ const POHRequestDashboard = () => {
   const [pohRequests, setPohRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [employeeIdInput, setEmployeeIdInput] = useState("");
+  const [employeeNameInput, setEmployeeNameInput] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const employeeId = user.id || "unknown";
+  const employeeName = user.name || "";
 
   useEffect(() => {
     fetchPOHRequests();
@@ -27,7 +29,7 @@ const POHRequestDashboard = () => {
   const handleRequestPOH = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8080/poh/save?employeeId=${employeeIdInput || employeeId}&date=${selectedDate}`,
+        `http://localhost:8080/poh/save?employeeId=${employeeIdInput || employeeId}&employeeName=${encodeURIComponent(employeeNameInput || employeeName)}&date=${selectedDate}`,
         { method: "POST" }
       );
 
@@ -37,6 +39,7 @@ const POHRequestDashboard = () => {
       fetchPOHRequests();
       setSelectedDate(new Date().toISOString().split("T")[0]);
       setEmployeeIdInput("");
+      setEmployeeNameInput("");
     } catch (error) {
       alert("❌ Error submitting POH request: " + error.message);
     }
@@ -56,6 +59,17 @@ const POHRequestDashboard = () => {
             onChange={(e) => setEmployeeIdInput(e.target.value)}
             className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
             placeholder="Enter Employee ID"
+          />
+        </div>
+
+        <div className="mt-4 text-left">
+          <label className="block text-gray-600 font-medium">Employee Name</label>
+          <input
+            type="text"
+            value={employeeNameInput}
+            onChange={(e) => setEmployeeNameInput(e.target.value)}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter Employee Name"
           />
         </div>
 
@@ -85,6 +99,7 @@ const POHRequestDashboard = () => {
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
                 <th className="py-3 px-6 text-left">Employee ID</th>
+                <th className="py-3 px-6 text-left">Employee Name</th>
                 <th className="py-3 px-6 text-left">Date</th>
                 <th className="py-3 px-6 text-left">Status</th>
               </tr>
@@ -97,6 +112,7 @@ const POHRequestDashboard = () => {
                     className="border-b border-gray-300 hover:bg-gray-100 transition"
                   >
                     <td className="py-4 px-6">{poh.employeeId}</td>
+                    <td className="py-4 px-6">{poh.employeeName || "N/A"}</td>
                     <td className="py-4 px-6">{new Date(poh.date).toLocaleDateString()}</td>
                     <td className="py-4 px-6">
                       <span
@@ -115,7 +131,7 @@ const POHRequestDashboard = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="text-center py-6 text-gray-500">
+                  <td colSpan="4" className="text-center py-6 text-gray-500">
                     No POH requests found.
                   </td>
                 </tr>

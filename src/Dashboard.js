@@ -54,13 +54,13 @@ const Dashboard = () => {
         { name: "Bill", path: "/bill"},
       ],
       Attendance: [
-        { name: "Mark Attendance", path: "/attendance/mark" },
-       
+        
+        { name: "Mark Attendence", path: "/attendance/new" },
         { name: "Attendance Request", path: "/attendance/request" },
         { name: "Leave Request", path: "/attendance/leave-request" },
         { name: "Overtime Request", path: "/attendance/overtime-request" },
         { name: "POH Request", path: "/attendance/poh-request" },
-        { name: "Attendance New", path: "/attendance/new" },
+        
       ]
     };
     setSidebarItems(sidebarData[section] || []);
@@ -103,12 +103,12 @@ const Dashboard = () => {
               <Route path="/bill" element={<Bill />} /> 
               
               {/* Attendance Routes */}
-              <Route path="/attendance/mark" element={<MarkAttendance />} />
+              <Route path="/attendance/new" element={<Attendecenew />} />
               <Route path="/attendance/request" element={<AttendanceRequestForm />} />
               <Route path="/attendance/leave-request" element={<LeaveRequest />} />
               <Route path="/attendance/overtime-request" element={<OvertimeRequest />} />
               <Route path="/attendance/poh-request" element={<POHRequest />} />
-              <Route path="/attendance/new" element={<Attendecenew />} />
+              
               
              
               

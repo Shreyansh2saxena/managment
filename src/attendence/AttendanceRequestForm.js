@@ -23,7 +23,7 @@ const AttendanceRequestForm = () => {
     e.preventDefault();
 
     if (!date || !time) {
-      alert("⚠️ Please select a date and time!");
+      alert(" Please select a date and time!");
       return;
     }
 
@@ -54,15 +54,15 @@ const AttendanceRequestForm = () => {
       }
 
       if (response.ok) {
-        alert(`✅ ${responseData.message || "Request submitted successfully!"}`);
+        alert(` ${responseData.message || "Request submitted successfully!"}`);
         setDate("");
         setTime("");
       } else {
-        alert(`❌ Error: ${responseData.error || "Invalid request"}`);
+        alert(` Error: ${responseData.error || "Invalid request"}`);
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("⚠️ An error occurred while submitting your request.");
+      alert(" An error occurred while submitting your request.");
     } finally {
       setLoading(false);
     }
@@ -76,22 +76,22 @@ const AttendanceRequestForm = () => {
           <input
             type="text"
             value={employee.id}
-            readOnly
-            className="w-full p-2 border rounded-lg bg-gray-100"
+            onChange={(e) => setEmployee({...employee, id: e.target.value})}
+            className="w-full p-2 border rounded-lg"
             placeholder="Employee ID"
           />
           <input
             type="text"
             value={employee.name}
-            readOnly
-            className="w-full p-2 border rounded-lg bg-gray-100"
+            onChange={(e) => setEmployee({...employee, name: e.target.value})}
+            className="w-full p-2 border rounded-lg"
             placeholder="Name"
           />
           <input
             type="email"
             value={employee.email}
-            readOnly
-            className="w-full p-2 border rounded-lg bg-gray-100"
+            onChange={(e) => setEmployee({...employee, email: e.target.value})}
+            className="w-full p-2 border rounded-lg"
             placeholder="Email"
           />
           <input

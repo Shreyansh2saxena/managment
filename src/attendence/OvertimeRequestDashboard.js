@@ -4,17 +4,28 @@ const OvertimeRequestDashboard = () => {
   const [overtimeHours, setOvertimeHours] = useState(0);
   const [overtimeRequests, setOvertimeRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [employeeIdInput, setEmployeeIdInput] = useState("");
+  const [employeeName, setEmployeeName] = useState("");
+  const [reason, setReason] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  const employeeId = user.id || "unknown";
+  const storedEmployeeId = user.id || "";
+  const storedEmployeeName = user.name || "";
 
   useEffect(() => {
-    fetchOvertimeRequests();
-  }, []);
+    setEmployeeIdInput(storedEmployeeId);
+    setEmployeeName(storedEmployeeName);
+  }, [storedEmployeeId, storedEmployeeName]);
+
+  useEffect(() => {
+    if (employeeIdInput) {
+      fetchOvertimeRequests();
+    }
+  }, [employeeIdInput]);
 
   const fetchOvertimeRequests = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/overtime/employee/${employeeId}`);
+      const response = await fetch(`http://localhost:8080/overtime/employee/${employeeIdInput}`);
       if (!response.ok) throw new Error("Failed to fetch overtime requests");
 
       const data = await response.json();
@@ -30,15 +41,40 @@ const OvertimeRequestDashboard = () => {
   };
 
   const handleRequestOvertime = async () => {
+    if (!employeeIdInput.trim()) {
+      alert("❌ Please enter an Employee ID.");
+      return;
+    }
+
+    if (!employeeName.trim()) {
+      alert("❌ Please enter an Employee Name.");
+      return;
+    }
+
     if (!overtimeHours || overtimeHours <= 0) {
       alert("❌ Please enter valid overtime hours.");
       return;
     }
 
     try {
+      const overtimeData = {
+        employeeId: employeeIdInput,
+        employeeName: employeeName,
+        date: selectedDate,
+        hours: overtimeHours,
+        reason: reason,
+        status: "Pending"
+      };
+
       const response = await fetch(
-        `http://localhost:8080/overtime/add?employeeId=${employeeId}&date=${selectedDate}&hours=${overtimeHours}`,
-        { method: "POST" }
+        "http://localhost:8080/overtime/add",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(overtimeData)
+        }
       );
 
       if (!response.ok) throw new Error("Failed to request overtime");
@@ -54,12 +90,35 @@ const OvertimeRequestDashboard = () => {
   const resetForm = () => {
     setOvertimeHours(0);
     setSelectedDate(new Date().toISOString().split("T")[0]);
+    setReason("");
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4">
-      <div className="w-full max-w-xl bg-white shadow-xl rounded-2xl p-8 text-center">
+      <div className="w-full max-w-xl bg-white shadow-xl rounded-2xl p-8 text-center mt-4">
         <h2 className="text-3xl font-bold text-gray-800">Overtime Request</h2>
+
+        <div className="mt-4">
+          <label className="block text-gray-600 font-medium text-left">Employee ID</label>
+          <input
+            type="text"
+            value={employeeIdInput}
+            onChange={(e) => setEmployeeIdInput(e.target.value)}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter Employee ID"
+          />
+        </div>
+
+        <div className="mt-4">
+          <label className="block text-gray-600 font-medium text-left">Employee Name</label>
+          <input
+            type="text"
+            value={employeeName}
+            onChange={(e) => setEmployeeName(e.target.value)}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+            placeholder="Enter Employee Name"
+          />
+        </div>
 
         <div className="mt-4">
           <label className="block text-gray-600 font-medium text-left">Overtime Date</label>
@@ -82,6 +141,17 @@ const OvertimeRequestDashboard = () => {
           />
         </div>
 
+        <div className="mt-4">
+          <label className="block text-gray-600 font-medium text-left">Reason for Overtime</label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full mt-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
+            rows="3"
+            placeholder="Please provide a reason for overtime request"
+          ></textarea>
+        </div>
+
         <button
           onClick={handleRequestOvertime}
           className="w-full bg-blue-500 text-white font-semibold py-3 mt-6 rounded-lg hover:bg-blue-600 transition"
@@ -91,16 +161,17 @@ const OvertimeRequestDashboard = () => {
       </div>
 
       {/* Overtime Requests Table */}
-      <div className="w-full max-w-4xl mt-10 bg-white shadow-xl rounded-2xl p-6">
-        <h3 className="text-2xl font-semibold text-gray-800 text-center">Your Overtime Requests</h3>
-        <div className="overflow-x-auto mt-4">
+      <div className="w-full max-w-4xl mt-10 bg-white shadow-xl rounded-2xl p-6 mb-4">
+        <h3 className="text-2xl font-semibold text-gray-800 text-center ">Your Overtime Requests</h3>
+        <div className="overflow-x-auto mt-4 ">
           <table className="w-full border-collapse rounded-lg overflow-hidden">
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase text-sm leading-normal">
                 <th className="py-3 px-6 text-left">Date</th>
-                <th className="py-3 px-6 text-left">Hours</th>
                 <th className="py-3 px-6 text-left">Employee ID</th>
-                <th className="py-3 px-6 text-left">Role</th>
+                <th className="py-3 px-6 text-left">Employee Name</th>
+                <th className="py-3 px-6 text-left">Hours</th>
+                <th className="py-3 px-6 text-left">Reason</th>
                 <th className="py-3 px-6 text-left">Status</th>
               </tr>
             </thead>
@@ -112,9 +183,10 @@ const OvertimeRequestDashboard = () => {
                     className="border-b border-gray-300 hover:bg-gray-100 transition"
                   >
                     <td className="py-4 px-6">{overtime.date}</td>
-                    <td className="py-4 px-6">{overtime.hours}</td>
                     <td className="py-4 px-6">{overtime.employeeId}</td>
-                    <td className="py-4 px-6">{overtime.role}</td>
+                    <td className="py-4 px-6">{overtime.employeeName || "N/A"}</td>
+                    <td className="py-4 px-6">{overtime.hours}</td>
+                    <td className="py-4 px-6">{overtime.reason || "Not specified"}</td>
                     <td className="py-4 px-6">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${
@@ -132,7 +204,7 @@ const OvertimeRequestDashboard = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="py-4 px-6 text-center text-gray-500">
+                  <td colSpan="6" className="py-4 px-6 text-center text-gray-500">
                     No overtime requests found.
                   </td>
                 </tr>
