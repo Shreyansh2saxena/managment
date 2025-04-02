@@ -1,230 +1,293 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const LeaveRequestDashboard = () => {
-  const [leaveType, setLeaveType] = useState("");
+const LeaveRequestForm = () => {
+  // Form state
+  const [employeeId, setEmployeeId] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
+  const [leaveType, setLeaveType] = useState('');
+  const [leaveDate, setLeaveDate] = useState(new Date().toISOString().split('T')[0]);
   const [isHalfDay, setIsHalfDay] = useState(false);
-  const [halfDayType, setHalfDayType] = useState("");
-  const [leaveRequests, setLeaveRequests] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
-  const [reason, setReason] = useState("");
-  const [employeeIdInput, setEmployeeIdInput] = useState("");
-  const [employeeName, setEmployeeName] = useState("");
+  const [halfDayType, setHalfDayType] = useState('First Half');
+  const [reason, setReason] = useState('');
+  
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+  
+  // Employee data
+  const [employeeData, setEmployeeData] = useState(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
-  const storedEmployeeId = user.id || "";
-  const storedEmployeeName = user.name || "";
+  // Leave type options
+  const leaveTypeOptions = [
+    { value: '', label: 'Select Leave Type' },
+    { value: 'Sick Leave', label: 'Sick Leave' },
+    { value: 'Casual Leave', label: 'Casual Leave' },
+    { value: 'Paid Leave', label: 'Paid Leave' }
+  ];
 
+  // Fetch employee data when ID changes
   useEffect(() => {
-    setEmployeeIdInput(storedEmployeeId);
-    setEmployeeName(storedEmployeeName);
-  }, [storedEmployeeId, storedEmployeeName]);
+    if (employeeId) {
+      fetchEmployeeData();
+    } else {
+      setEmployeeName('');
+      setEmployeeData(null);
+    }
+  }, [employeeId]);
 
-  const fetchLeaveRequests = async () => {
+  // Fetch employee data
+  const fetchEmployeeData = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/leaves/get/${employeeIdInput || storedEmployeeId}`);
-      console.log("API Response:", response.data);
-
-      const formattedData = response.data.totalLeaves.map((leave) => ({
-        ...leave,
-        leaveDate: new Date(leave.leaveDate).toLocaleDateString(),
-      }));
-
-      setLeaveRequests(formattedData);
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8081/api/employees/${employeeId}`);
+      if (response.data) {
+        setEmployeeName(response.data.employeeName || '');
+        setEmployeeData(response.data);
+        showMessage('', ''); // Clear any previous messages
+      } else {
+        setEmployeeName('');
+        setEmployeeData(null);
+        showMessage('Employee not found', 'error');
+      }
+      setLoading(false);
     } catch (error) {
-      console.error("Error fetching leave requests:", error);
+      setEmployeeName('');
+      setEmployeeData(null);
+      showMessage('Error fetching employee data', 'error');
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (employeeIdInput) {
-      fetchLeaveRequests();
+  // Show message with type (success/error)
+  const showMessage = (msg, type) => {
+    setMessage(msg);
+    setMessageType(type);
+    // Auto clear message after 5 seconds
+    if (msg) {
+      setTimeout(() => {
+        setMessage('');
+        setMessageType('');
+      }, 5000);
     }
-  }, [employeeIdInput]);
+  };
 
-  const handleRequestLeave = async () => {
-    if (!employeeIdInput) {
-      alert("❌ Please enter an Employee ID.");
+  // Form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!employeeId) {
+      showMessage('Please enter employee ID', 'error');
       return;
     }
-
+    
     if (!leaveType) {
-      alert("❌ Please select a leave type.");
+      showMessage('Please select leave type', 'error');
       return;
     }
-
-    if (!reason.trim()) {
-      alert("❌ Please provide a reason for your leave.");
-      return;
-    }
-
-    const leaveData = {
-      employeeId: employeeIdInput,
-      employeeName: employeeName,
-      leaveType,
-      leaveStatus: "Pending",
-      isHalfDay,
-      halfDayType: isHalfDay ? halfDayType : null,
-      leaveDate: selectedDate,
-      reason: reason
-    };
-
+    
     try {
-      await axios.post("http://localhost:8080/leaves/apply", leaveData);
-      alert("✅ Leave request submitted successfully!");
-      fetchLeaveRequests();
+      setLoading(true);
+      
+      const leaveRequest = {
+        employeeId: parseInt(employeeId),
+        leaveType,
+        isHalfDay,
+        halfDayType: isHalfDay ? halfDayType : null,
+        leaveDate,
+        reason
+      };
+      
+      const response = await axios.post('http://localhost:8081/api/leaves/apply', leaveRequest);
+      showMessage('Leave request submitted successfully', 'success');
+      
+      // Reset form after successful submission
       resetForm();
+      
+      setLoading(false);
     } catch (error) {
-      alert("❌ Error submitting leave request: " + error.message);
+      let errorMessage = 'Failed to submit leave request';
+      
+      // Handle error properly - ensure we're only rendering strings
+      if (error.response && typeof error.response.data === 'string') {
+        errorMessage = error.response.data;
+      } else if (error.message && typeof error.message === 'string') {
+        errorMessage = error.message;
+      }
+      
+      showMessage(errorMessage, 'error');
+      setLoading(false);
     }
   };
-
+  
+  // Reset form
   const resetForm = () => {
-    setLeaveType("");
+    setLeaveType('');
+    setLeaveDate(new Date().toISOString().split('T')[0]);
     setIsHalfDay(false);
-    setHalfDayType("");
-    setSelectedDate(new Date().toISOString().split("T")[0]);
-    setReason("");
+    setHalfDayType('First Half');
+    setReason('');
+    // Keep employee ID and name as they are
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
-      <div className="bg-white shadow-lg rounded-lg p-6 max-w-lg w-full text-center">
-        <h2 className="text-2xl font-bold mb-4">Leave Request</h2>
-
+    <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
+      <h1 className="text-2xl font-bold text-center mb-6">Leave Request</h1>
+      
+      {/* Message display */}
+      {message && (
+        <div 
+          className={`mb-4 p-3 border rounded ${
+            messageType === 'success' 
+              ? 'bg-green-100 border-green-400 text-green-700' 
+              : 'bg-red-100 border-red-400 text-red-700'
+          }`}
+        >
+          {message}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit}>
+        {/* Employee ID */}
         <div className="mb-4">
-          <label className="block text-left text-gray-700 mb-1">Employee ID</label>
+          <label htmlFor="employeeId" className="block text-gray-700 mb-2">
+            Employee ID
+          </label>
           <input
-            type="text"
-            value={employeeIdInput}
-            onChange={(e) => setEmployeeIdInput(e.target.value)}
-            className="w-full p-2 border rounded-lg"
+            type="number"
+            id="employeeId"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             placeholder="Enter Employee ID"
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
           />
         </div>
-
+        
+        {/* Employee Name */}
         <div className="mb-4">
-          <label className="block text-left text-gray-700 mb-1">Employee Name</label>
+          <label htmlFor="employeeName" className="block text-gray-700 mb-2">
+            Employee Name
+          </label>
           <input
             type="text"
-            value={employeeName}
-            onChange={(e) => setEmployeeName(e.target.value)}
-            className="w-full p-2 border rounded-lg"
+            id="employeeName"
+            className="w-full p-2 border border-gray-300 rounded bg-gray-50"
             placeholder="Enter Employee Name"
+            value={employeeName}
+            readOnly
           />
         </div>
-
+        
+        {/* Leave Type */}
         <div className="mb-4">
-          <label className="block text-left text-gray-700 mb-1">Leave Type</label>
+          <label htmlFor="leaveType" className="block text-gray-700 mb-2">
+            Leave Type
+          </label>
           <select
+            id="leaveType"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
             value={leaveType}
             onChange={(e) => setLeaveType(e.target.value)}
-            className="w-full p-2 border rounded-lg"
           >
-            <option value="">Select Leave Type</option>
-            <option value="Sick Leave">Sick Leave</option>
-            <option value="Casual Leave">Casual Leave</option>
-            <option value="Paid Leave">Paid Leave</option>
+            {leaveTypeOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
-
+        
+        {/* Leave Date */}
         <div className="mb-4">
-          <label className="block text-left text-gray-700 mb-1">Leave Date</label>
+          <label htmlFor="leaveDate" className="block text-gray-700 mb-2">
+            Leave Date
+          </label>
           <input
             type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-full p-2 border rounded-lg"
+            id="leaveDate"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+            value={leaveDate}
+            onChange={(e) => setLeaveDate(e.target.value)}
           />
         </div>
-
-        <div className="flex items-center mb-4">
-          <input
-            type="checkbox"
-            checked={isHalfDay}
-            onChange={() => setIsHalfDay(!isHalfDay)}
-            className="mr-2"
-            id="halfDayCheckbox"
-          />
-          <label htmlFor="halfDayCheckbox">Apply for Half Day</label>
-        </div>
-
-        {isHalfDay && (
-          <div className="mb-4">
-            <label className="block text-left text-gray-700 mb-1">Half Day Type</label>
-            <select
-              value={halfDayType}
-              onChange={(e) => setHalfDayType(e.target.value)}
-              className="w-full p-2 border rounded-lg"
-            >
-              <option value="">Select Half Day Type</option>
-              <option value="First Half">First Half</option>
-              <option value="Second Half">Second Half</option>
-            </select>
-          </div>
-        )}
-
+        
+        {/* Half Day Option */}
         <div className="mb-4">
-          <label className="block text-left text-gray-700 mb-1">Reason for Leave</label>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isHalfDay"
+              className="mr-2"
+              checked={isHalfDay}
+              onChange={(e) => setIsHalfDay(e.target.checked)}
+            />
+            <label htmlFor="isHalfDay" className="text-gray-700">
+              Apply for Half Day
+            </label>
+          </div>
+          
+          {/* Show half day type selection if half day is checked */}
+          {isHalfDay && (
+            <div className="mt-2 ml-6">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="firstHalf"
+                  name="halfDayType"
+                  value="First Half"
+                  checked={halfDayType === 'First Half'}
+                  onChange={(e) => setHalfDayType(e.target.value)}
+                  className="mr-2"
+                />
+                <label htmlFor="firstHalf" className="text-gray-700 mr-4">
+                  First Half
+                </label>
+              </div>
+              <div className="flex items-center mt-1">
+                <input
+                  type="radio"
+                  id="secondHalf"
+                  name="halfDayType"
+                  value="Second Half"
+                  checked={halfDayType === 'Second Half'}
+                  onChange={(e) => setHalfDayType(e.target.value)}
+                  className="mr-2"
+                />
+                <label htmlFor="secondHalf" className="text-gray-700">
+                  Second Half
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Reason for Leave */}
+        <div className="mb-6">
+          <label htmlFor="reason" className="block text-gray-700 mb-2">
+            Reason for Leave
+          </label>
           <textarea
+            id="reason"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+            rows="4"
+            placeholder="Please provide a reason for your leave request"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full p-2 border rounded-lg"
-            rows="3"
-            placeholder="Please provide a reason for your leave request"
           ></textarea>
         </div>
-
+        
+        {/* Submit Button */}
         <button
-          onClick={handleRequestLeave}
-          className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 focus:outline-none disabled:opacity-50"
         >
-          Submit Request
+          {loading ? 'Submitting...' : 'Submit Request'}
         </button>
-      </div>
-
-      <h3 className="text-xl font-semibold mt-6">Your Leave Requests</h3>
-      <div className="bg-white shadow-lg rounded-lg p-4 mt-2 max-w-5xl w-full overflow-x-auto">
-        {leaveRequests.length > 0 ? (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="p-2 border">Employee ID</th>
-                <th className="p-2 border">Employee Name</th>
-                <th className="p-2 border">Date</th>
-                <th className="p-2 border">Leave Type</th>
-                <th className="p-2 border">Duration</th>
-                <th className="p-2 border">Reason</th>
-                <th className="p-2 border">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaveRequests.map((leave, index) => (
-                <tr key={index} className="border">
-                  <td className="p-2 border">{leave.employeeId}</td>
-                  <td className="p-2 border">{leave.employeeName || "N/A"}</td>
-                  <td className="p-2 border">{leave.leaveDate}</td>
-                  <td className="p-2 border">{leave.leaveType}</td>
-                  <td className="p-2 border">{leave.isHalfDay ? leave.halfDayType : "Full Day"}</td>
-                  <td className="p-2 border">{leave.reason || "Not specified"}</td>
-                  <td className="p-2 border">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold 
-                      ${leave.leaveStatus === "Approved" ? "bg-green-100 text-green-800" : 
-                        leave.leaveStatus === "Rejected" ? "bg-red-100 text-red-800" : 
-                        "bg-yellow-100 text-yellow-800"}`}>
-                      {leave.leaveStatus}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-gray-600 text-center">No leave requests found.</p>
-        )}
-      </div>
+      </form>
     </div>
   );
 };
 
-export default LeaveRequestDashboard;
+export default LeaveRequestForm;
