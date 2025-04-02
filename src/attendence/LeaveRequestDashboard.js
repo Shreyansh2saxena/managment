@@ -24,7 +24,8 @@ const LeaveRequestForm = () => {
     { value: '', label: 'Select Leave Type' },
     { value: 'Sick Leave', label: 'Sick Leave' },
     { value: 'Casual Leave', label: 'Casual Leave' },
-    { value: 'Paid Leave', label: 'Paid Leave' }
+    { value: 'Paid Leave', label: 'Paid Leave' },
+    { value: 'LOP', label: 'LOP' }
   ];
 
   // Fetch employee data when ID changes

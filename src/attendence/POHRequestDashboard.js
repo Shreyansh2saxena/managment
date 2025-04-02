@@ -15,7 +15,7 @@ const POHRequestForm = () => {
   const [searchType, setSearchType] = useState('id'); // 'id' or 'name'
   const [isSearchMode, setIsSearchMode] = useState(false);
 
-  // Fetch all POH requests when component mounts
+  
   useEffect(() => {
     fetchAllPOHRequests();
   }, []);
