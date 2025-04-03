@@ -21,7 +21,7 @@ const AddIssuedDoc = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/employees");
+        const response = await axios.get("http://localhost:8081/api/employees/getall");
         setEmployeeList(response.data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -51,7 +51,7 @@ const AddIssuedDoc = () => {
     setFormData((prev) => ({
       ...prev,
       employeeName: employee.employeeName,
-      employeeId: employee.employeeId,
+      employeeId: employee.id,
     }));
     setFilteredEmployees([]); // Hide suggestions after selection
   };
@@ -72,7 +72,7 @@ const AddIssuedDoc = () => {
     try {
       // Validate if employee ID exists
       const response = await axios.get(
-        `http://localhost:8080/api/employees/${formData.employeeId}`
+        `http://localhost:8081/api/employees/${formData.employeeId}`
       );
 
       if (!response.data) {
@@ -88,7 +88,7 @@ const AddIssuedDoc = () => {
       formDataObj.append("issuedBy", formData.issuedBy);
       formDataObj.append("file", formData.file);
 
-      await axios.post("http://localhost:8080/api/issued-docs", formDataObj, {
+      await axios.post("http://localhost:8081/api/issued-docs", formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -145,12 +145,12 @@ const AddIssuedDoc = () => {
             <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full shadow-md max-h-40 overflow-y-auto">
               {filteredEmployees.map((emp) => (
                 <li
-                  key={emp.employeeId}
+                  key={emp.id}
                   className="p-2 cursor-pointer hover:bg-gray-200 flex justify-between"
                   onClick={() => handleSelectEmployee(emp)}
                 >
                   <span>{emp.employeeName}</span>
-                  <span className="text-gray-500">({emp.employeeId})</span>
+                  <span className="text-gray-500">({emp.id})</span>
                 </li>
               ))}
             </ul>

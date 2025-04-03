@@ -19,22 +19,30 @@ const VendorForm = () => {
   const [editId, setEditId] = useState(null);
   const [image, setImage] = useState(null);       // Image file
   const [preview, setPreview] = useState("");     // Image preview
+  const [currentPage, setCurrentPage] = useState(0);
+  const vendorsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [currentPage]);
 
   const fetchVendors = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/vendors");
-      if (response.ok) {
+        const response = await fetch(`http://localhost:8081/api/vendors?page=${currentPage}&size=${vendorsPerPage}`);
+        
         const data = await response.json();
-        setVendors(data);
-      }
+
+        setVendors(Array.isArray(data.content) ? data.content : []); // Ensure vendors is always an array
+        setTotalPages(data.totalPages ?? 1); // Ensure totalPages has a default value
     } catch (error) {
-      console.error("Error fetching vendors:", error);
+        console.error("Error fetching vendors:", error);
+        setVendors([]); // Prevent undefined issues
+        setTotalPages(1); // Ensure UI doesn't break on error
     }
-  };
+};
+
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,8 +76,8 @@ const VendorForm = () => {
     try {
       const method = editId ? "PUT" : "POST";
       const url = editId
-        ? `http://localhost:8080/api/vendors/${editId}`
-        : "http://localhost:8080/api/vendors";
+        ? `http://localhost:8081/api/vendors/${editId}`
+        : "http://localhost:8081/api/vendors";
 
       const response = await fetch(url, {
         method,
@@ -105,7 +113,7 @@ const VendorForm = () => {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:8080/api/vendors/${id}`, { method: "DELETE" });
+      await fetch(`http://localhost:8081/api/vendors/${id}`, { method: "DELETE" });
       alert("Vendor deleted successfully");
       fetchVendors();
     } catch (error) {
@@ -121,7 +129,7 @@ const VendorForm = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/vendors/${searchId}`);
+      const response = await fetch(`http://localhost:8081/api/vendors/${searchId}`);
       if (response.ok) {
         const data = await response.json();
         setVendors([data]);
@@ -191,7 +199,7 @@ const VendorForm = () => {
                 <td className="border p-2">{v.id}</td>
                 <td className="border p-2">{v.name}</td>
                 <td className="border p-2">
-                  <img src={`http://localhost:8080/api/vendors/${v.id}/image`} alt={v.name} className="w-16 h-16 object-cover" />
+                  <img src={`http://localhost:8081/api/vendors/${v.id}/image`} alt={v.name} className="w-16 h-16 object-cover" />
                 </td>
                 <td className="border p-2">
                   <button onClick={() => handleEdit(v)} className="bg-yellow-500 text-white p-1 rounded mx-2">Edit</button>
@@ -201,6 +209,23 @@ const VendorForm = () => {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-between my-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+          disabled={currentPage === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="self-center text-lg">Page {currentPage + 1} of {totalPages}</span>
+        <button
+          onClick={() => setCurrentPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+          disabled={currentPage + 1 >= totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

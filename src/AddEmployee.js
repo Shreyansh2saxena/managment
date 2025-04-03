@@ -7,6 +7,11 @@ const AddEmployee = () => {
     address: "",
     phone: "",
     email: "",
+    ifsc : '',
+    accountNo :"",
+    bankName: "",
+    bankingEmpName: "",
+
     role: "Employee",
   });
 
@@ -17,13 +22,17 @@ const AddEmployee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8080/api/employees", employee);
+      await axios.post("http://localhost:8081/api/employees", employee);
       alert("Employee added successfully!");
       setEmployee({
         employeeName: "",
         address: "",
         phone: "",
         email: "",
+        bankName: "",
+        ifsc: "",
+        accountNo: "",
+        bankingEmpName: "",
         role: "Employee",
       });
     } catch (error) {
@@ -87,6 +96,50 @@ const AddEmployee = () => {
               type="email"
               name="email"
               value={employee.email}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Bank Name</label>
+            <input
+              type="bankName"
+              name="bankName"
+              value={employee.bankName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">IFSC code</label>
+            <input
+              type="ifsc"
+              name="ifsc"
+              value={employee.ifsc}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Employee's Banking Name</label>
+            <input
+              type="bankingEmpName"
+              name="bankingEmpName"
+              value={employee.bankingEmpName}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700">Account Number</label>
+            <input
+              type="accountNo"
+              name="accountNo"
+              value={employee.accountNo}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"

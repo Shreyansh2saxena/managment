@@ -4,29 +4,47 @@ import axios from "axios";
 
 const ViewIssuedDocs = () => {
   const [docs, setDocs] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchEmployeeId, setSearchEmployeeId] = useState("");
+  const [searchEmployeeName, setSearchEmployeeName] = useState("");
   const [searchDocType, setSearchDocType] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
 
   // Fetch documents
   useEffect(() => {
+    setLoading(true);
     axios
-      .get("http://localhost:8080/api/issued-docs")
+      .get(`http://localhost:8081/api/issued-docs/getall?page=${page}&size=${pageSize}`)
       .then((response) => {
-        setDocs(response.data);
+        setDocs(response.data.content);
+        setTotalPages(response.data.totalPages);
         setLoading(false);
+        
+        // Create a unique list of employees from the fetched documents
+        const uniqueEmployees = Array.from(
+          new Set(response.data.content.map(doc => JSON.stringify({
+            id: doc.employeeId,
+            name: doc.employeeName
+          })))
+        ).map(str => JSON.parse(str));
+        
+        setAllEmployees(uniqueEmployees);
       })
       .catch((error) => {
         console.error("Error fetching documents:", error);
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   // Delete Document
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/issued-docs/${id}`);
+        await axios.delete(`http://localhost:8081/api/issued-docs/${id}`);
         setDocs((prevDocs) => prevDocs.filter((doc) => doc.id !== id));
         alert("Document deleted successfully!");
       } catch (error) {
@@ -40,7 +58,7 @@ const ViewIssuedDocs = () => {
   const handleView = async (doc) => {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/issued-docs/view/${doc.id}`,
+        `http://localhost:8081/api/issued-docs/view/${doc.id}`,
         { responseType: "blob" }
       );
       const fileBlob = new Blob([response.data], { type: "application/pdf" });
@@ -53,11 +71,38 @@ const ViewIssuedDocs = () => {
     }
   };
 
+  // Handle employee name search and suggestions
+  const handleEmployeeSearch = (e) => {
+    const query = e.target.value;
+    setSearchEmployeeName(query);
+    
+    if (query.trim() === "") {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    const filteredSuggestions = allEmployees.filter(
+      employee => employee.name.toLowerCase().includes(query.toLowerCase()) ||
+                 employee.id.toString().includes(query)
+    );
+    
+    setSuggestions(filteredSuggestions);
+    setShowSuggestions(true);
+  };
+
+  // Select suggestion
+  const selectSuggestion = (employee) => {
+    setSearchEmployeeName(employee.name);
+    setShowSuggestions(false);
+  };
+
   // Filtered Documents
   const filteredDocs = docs.filter(
     (doc) =>
-      (searchEmployeeId
-        ? doc.employeeId.toString().includes(searchEmployeeId)
+      (searchEmployeeName
+        ? doc.employeeName.toLowerCase().includes(searchEmployeeName.toLowerCase()) ||
+          doc.employeeId.toString().includes(searchEmployeeName)
         : true) &&
       (searchDocType
         ? doc.typeOfDoc.toLowerCase().includes(searchDocType.toLowerCase())
@@ -73,13 +118,31 @@ const ViewIssuedDocs = () => {
 
         {/* Search Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Search by Employee ID"
-            value={searchEmployeeId}
-            onChange={(e) => setSearchEmployeeId(e.target.value)}
-            className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by Employee Name or ID"
+              value={searchEmployeeName}
+              onChange={handleEmployeeSearch}
+              onFocus={() => searchEmployeeName && setSuggestions.length > 0 && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 max-h-60 overflow-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+                {suggestions.map((employee, index) => (
+                  <div
+                    key={index}
+                    className="p-2 hover:bg-blue-100 cursor-pointer"
+                    onClick={() => selectSuggestion(employee)}
+                  >
+                    <span className="font-medium">{employee.name}</span>
+                    <span className="text-gray-500 ml-2">(ID: {employee.id})</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <input
             type="text"
             placeholder="Search by Document Type"
@@ -100,6 +163,8 @@ const ViewIssuedDocs = () => {
               <thead className="bg-blue-600 text-white">
                 <tr>
                   <th className="p-3">Employee ID</th>
+                  <th className="p-3">Employee Name</th>
+                  <th className="p-3">Role</th>
                   <th className="p-3">Document Type</th>
                   <th className="p-3">Issued By</th>
                   <th className="p-3">Issued Date</th>
@@ -111,6 +176,8 @@ const ViewIssuedDocs = () => {
                   filteredDocs.map((doc) => (
                     <tr key={doc.id} className="border-t">
                       <td className="p-3">{doc.employeeId}</td>
+                      <td className="p-3">{doc.employeeName}</td>
+                      <td className="p-3">{doc.role}</td>
                       <td className="p-3">{doc.typeOfDoc}</td>
                       <td className="p-3">{doc.issuedBy}</td>
                       <td className="p-3">{doc.dateOfIssue}</td>
@@ -132,7 +199,7 @@ const ViewIssuedDocs = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="p-4 text-center text-gray-500">
+                    <td colSpan="7" className="p-4 text-center text-gray-500">
                       No records found
                     </td>
                   </tr>
@@ -141,6 +208,23 @@ const ViewIssuedDocs = () => {
             </table>
           </div>
         )}
+        <div className="flex justify-between my-4">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            disabled={page === 0}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="self-center text-lg">Page {page + 1} of {totalPages}</span>
+          <button
+            onClick={() => setPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+            disabled={page + 1 >= totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

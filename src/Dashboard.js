@@ -13,7 +13,14 @@ import MailPage from "./mails";
 import Vendor from "./Vendor";
 import Customer from "./Customer";
 import Bill from "./Bill";
-
+import AttendanceRequestForm from "./attendence/AttendanceRequestForm";
+import MarkAttendance from "./attendence/MarkAttendance"; 
+import LeaveRequest from "./attendence/LeaveRequestDashboard"; 
+import OvertimeRequest from "./attendence/OvertimeRequestDashboard"; 
+import POHRequest from "./attendence/POHRequestDashboard";
+import Attendecenew from "./attendence/Attendancenew";
+import MonthSummaryForm from "./attendence/Monthsummary";
+import Weekend from "./attendence/Weekendconf";
 const Dashboard = () => {
   const [sidebarItems, setSidebarItems] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -47,6 +54,17 @@ const Dashboard = () => {
         { name: "Customer", path: "/customer" },
         { name: "Bill", path: "/bill"},
       ],
+      Attendance: [
+        
+        { name: "Mark Attendence", path: "/attendance/new" },
+        { name: "Attendance Request", path: "/attendance/request" },
+        { name: "Leave Request", path: "/attendance/leave-request" },
+        { name: "Overtime Request", path: "/attendance/overtime-request" },
+        { name: "POH Request", path: "/attendance/poh-request" },
+        { name: "Attendance Summary", path: "/attendance/month" },
+        { name: "Set Weekend", path: "/attendance/weekend" },
+        
+      ]
     };
     setSidebarItems(sidebarData[section] || []);
   };
@@ -64,17 +82,37 @@ const Dashboard = () => {
           {!isMobile && isSidebarOpen && <Sidebar sidebarItems={sidebarItems} />}
           <div className="flex-1 p-6 overflow-y-auto">
             <Routes>
+              {/* Home Route */}
               <Route path="/" element={<Home />} />
+              
+              {/* Employee Routes */}
               <Route path="/employees/add" element={<AddEmployee />} />
               <Route path="/employees/view" element={<ViewEmployees />} />
+              
+              {/* Document Routes */}
               <Route path="/documents/add" element={<AddDocument />} />
               <Route path="/documents/view" element={<ViewDocuments />} />
+              
+              {/* Issued Document Routes */}
               <Route path="/issued-documents/add" element={<AddIssuedDocument />} />
               <Route path="/issued-documents/view" element={<ViewIssuedDocuments />} />
+              
+              {/* Mail Route */}
               <Route path="/mails" element={<MailPage />} /> 
+              
+              {/* Vendor Routes */}
               <Route path="/vendors" element={<Vendor />} /> 
               <Route path="/customer" element={<Customer />} /> 
               <Route path="/bill" element={<Bill />} /> 
+              
+              {/* Attendance Routes */}
+              <Route path="/attendance/new" element={<Attendecenew />} />
+              <Route path="/attendance/request" element={<AttendanceRequestForm />} />
+              <Route path="/attendance/leave-request" element={<LeaveRequest />} />
+              <Route path="/attendance/overtime-request" element={<OvertimeRequest />} />
+              <Route path="/attendance/poh-request" element={<POHRequest />} />
+              <Route path="/attendance/month" element={<MonthSummaryForm/>} />
+              <Route path="/attendance/weekend" element={<Weekend/>} />
             </Routes>
           </div>
         </div>

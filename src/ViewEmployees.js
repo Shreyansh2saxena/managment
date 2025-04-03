@@ -1,39 +1,79 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Delete, ModeEdit } from "@mui/icons-material";
 
 const ViewEmployee = () => {
   const [employees, setEmployees] = useState([]);
-  const [searchId, setSearchId] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [filterFields, setFilterFields] = useState([]);
   const [editEmployee, setEditEmployee] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totPage, settotpage] = useState(1);
+  const [size] = useState(10);
+  const suggestionRef = useRef(null);
 
   useEffect(() => {
     fetchEmployees();
+  }, [page]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/employees");
-      setEmployees(response.data);
+      const response = await axios.get(
+        `http://localhost:8081/api/employees?page=${page}&size=${size}`
+      );
+
+      const { content, totalPages } = response.data;
+      setEmployees(content || []);
+      settotpage(totalPages || 1);
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
   };
 
-  const filteredEmployees = searchId
-    ? employees.filter((emp) => emp.employeeId.toString().includes(searchId))
+  // Filter employees by name instead of ID
+  const filteredEmployees = searchName
+    ? employees.filter((emp) => 
+        emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
     : employees;
+
+  // Filter suggestions based on input
+  const suggestions = searchName
+    ? employees.filter((emp) =>
+        emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
+    : [];
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/employees/${id}`);
+        await axios.delete(`http://localhost:8081/api/employees/${id}`);
         alert("Employee deleted successfully!");
+        
+        // Refetch the current page to reflect the changes immediately
         fetchEmployees();
+        
+        
+        if (filteredEmployees.length === 1 && page > 0) {
+          setPage(page - 1);
+        }
       } catch (error) {
         console.error("Error deleting employee:", error);
+        alert("Failed to delete employee. Please try again.");
       }
     }
   };
@@ -55,7 +95,7 @@ const ViewEmployee = () => {
     e.preventDefault();
     try {
       await axios.put(
-        `http://localhost:8080/api/employees/${editEmployee.employeeId}`,
+        `http://localhost:8081/api/employees/${editEmployee.id}`,
         editEmployee,
         {
           headers: {
@@ -68,6 +108,7 @@ const ViewEmployee = () => {
       fetchEmployees();
     } catch (error) {
       console.error("Error updating employee:", error);
+      alert("Failed to update employee. Please try again.");
     }
   };
 
@@ -80,6 +121,11 @@ const ViewEmployee = () => {
     );
   };
 
+  const handleSuggestionClick = (employee) => {
+    setSearchName(employee.employeeName);
+    setShowSuggestions(false);
+  };
+
   const handleDownload = () => {
     const csvRows = [];
     const headers = ["ID", "Name", ...filterFields];
@@ -87,7 +133,7 @@ const ViewEmployee = () => {
 
     filteredEmployees.forEach((employee) => {
       const row = [
-        employee.employeeId,
+        employee.id,
         employee.employeeName,
         ...filterFields.map((field) => employee[field] || "")
       ];
@@ -113,13 +159,39 @@ const ViewEmployee = () => {
 
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mb-4">
-          <input
-            type="text"
-            placeholder="Search by Employee ID"
-            value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
-            className="w-full md:w-1/2 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <div className="w-full md:w-1/2 relative">
+            <input
+              type="text"
+              placeholder="Search by Employee Name"
+              value={searchName}
+              onChange={(e) => {
+                setSearchName(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            
+            {/* Suggestions Dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div 
+                ref={suggestionRef}
+                className="absolute z-10 bg-white w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              >
+                {suggestions.map((emp) => (
+                  <div
+                    key={emp.id}
+                    className="p-2 hover:bg-gray-100 cursor-pointer border-b"
+                    onClick={() => handleSuggestionClick(emp)}
+                  >
+                    <span className="font-medium">{emp.employeeName}</span>
+                    <span className="text-gray-500 ml-2">ID: {emp.id}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <div className="w-full md:w-1/2 flex flex-wrap space-x-2">
             {["role", "email", "phone", "address"].map((field) => (
               <label key={field} className="flex items-center space-x-1">
@@ -159,37 +231,47 @@ const ViewEmployee = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map((employee) => (
-                <tr key={employee.employeeId} className="border-t">
-                  <td className="p-3">{employee.employeeId}</td>
-                  <td className="p-3">{employee.employeeName}</td>
-                  {filterFields.includes("address") && <td className="p-3">{employee.address}</td>}
-                  {filterFields.includes("phone") && <td className="p-3">{employee.phone}</td>}
-                  {filterFields.includes("email") && <td className="p-3">{employee.email}</td>}
-                  {filterFields.includes("role") && <td className="p-3">{employee.role}</td>}
-                  <td className="p-3 flex justify-center space-x-2">
-                    <button
-                      onClick={() => handleDelete(employee.employeeId)}
-                      className="p-1 text-red-500 hover:text-red-700"
-                    >
-                      <Delete />
-                    </button>
-                    <button
-                      onClick={() => openEditDialog(employee)}
-                      className="p-1 text-blue-500 hover:text-blue-700"
-                    >
-                      <ModeEdit />
-                    </button>
+              {filteredEmployees.length > 0 ? (
+                filteredEmployees.map((employee) => (
+                  <tr key={employee.id} className="border-t">
+                    <td className="p-3">{employee.id}</td>
+                    <td className="p-3">{employee.employeeName}</td>
+                    {filterFields.includes("address") && <td className="p-3">{employee.address}</td>}
+                    {filterFields.includes("phone") && <td className="p-3">{employee.phone}</td>}
+                    {filterFields.includes("email") && <td className="p-3">{employee.email}</td>}
+                    {filterFields.includes("role") && <td className="p-3">{employee.role}</td>}
+                    <td className="p-3 flex justify-center space-x-2">
+                      <button
+                        onClick={() => handleDelete(employee.id)}
+                        className="p-1 text-red-500 hover:text-red-700"
+                        aria-label="Delete employee"
+                      >
+                        <Delete />
+                      </button>
+                      <button
+                        onClick={() => openEditDialog(employee)}
+                        className="p-1 text-blue-500 hover:text-blue-700"
+                        aria-label="Edit employee"
+                      >
+                        <ModeEdit />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={filterFields.length + 3} className="p-4 text-center text-gray-500">
+                    No employees found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Edit Employee Modal */}
         {isEditModalOpen && editEmployee && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
               <h3 className="text-xl font-bold mb-4">Edit Employee</h3>
               <form onSubmit={handleEditSubmit}>
@@ -201,6 +283,7 @@ const ViewEmployee = () => {
                     value={editEmployee.employeeName}
                     onChange={handleEditChange}
                     className="w-full p-2 border rounded-lg"
+                    required
                   />
                 </label>
                 <label className="block mb-4">
@@ -211,26 +294,29 @@ const ViewEmployee = () => {
                     value={editEmployee.email}
                     onChange={handleEditChange}
                     className="w-full p-2 border rounded-lg"
+                    required
                   />
                 </label>
                 <label className="block mb-4">
-                  Phone
+                  Phone:
                   <input
-                    type="phone"
+                    type="tel"
                     name="phone"
                     value={editEmployee.phone}
                     onChange={handleEditChange}
                     className="w-full p-2 border rounded-lg"
+                    required
                   />
                 </label>
                 <label className="block mb-4">
-                  Email:
+                  Address:
                   <input
-                    type="address"
+                    type="text"
                     name="address"
                     value={editEmployee.address}
                     onChange={handleEditChange}
                     className="w-full p-2 border rounded-lg"
+                    required
                   />
                 </label>
                 <label className="block mb-4">
@@ -240,6 +326,7 @@ const ViewEmployee = () => {
                     value={editEmployee.role}
                     onChange={handleEditChange}
                     className="w-full p-2 border rounded-lg"
+                    required
                   >
                     <option value="Employee">Employee</option>
                     <option value="Admin">Admin</option>
@@ -247,13 +334,45 @@ const ViewEmployee = () => {
                 </label>
 
                 <div className="flex justify-end space-x-2">
-                  <button onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 bg-gray-500 text-white rounded-lg">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)} 
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                  >
+                    Save
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
+        
+        {/* Pagination */}
+        <div className="flex justify-between items-center my-4">
+          <button
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            disabled={page === 0}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-lg">Page {page + 1} of {totPage}</span>
+
+          <button
+            onClick={() => setPage((prev) => (prev + 1 < totPage ? prev + 1 : prev))}
+            disabled={page + 1 >= totPage}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

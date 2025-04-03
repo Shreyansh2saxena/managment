@@ -15,14 +15,23 @@ const AddDocumentForm = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/employees");
-        setEmployeeList(response.data);
+        const response = await axios.get("http://localhost:8081/api/employees/getall");
+       // console.log("Fetched Employees:", response.data);
+        
+        // Validate employee data structure
+        const validEmployees = response.data.filter(
+          emp => emp.employeeName && emp.id
+        );
+        
+        setEmployeeList(validEmployees);
       } catch (error) {
         console.error("Error fetching employees:", error);
+        setMessage("Could not load employee list");
       }
     };
     fetchEmployees();
   }, []);
+;
 
   // Handle employee name input change
   const handleEmployeeNameChange = (e) => {
@@ -43,7 +52,7 @@ const AddDocumentForm = () => {
   // Handle selecting an employee from suggestions
   const handleSelectEmployee = (employee) => {
     setEmployeeName(employee.employeeName);
-    setEmployeeId(employee.employeeId);
+    setEmployeeId(employee.id);
     setFilteredEmployees([]); // Hide suggestions after selection
   };
 
@@ -69,7 +78,7 @@ const AddDocumentForm = () => {
 
     try {
       await axios.post(
-        "http://localhost:8080/api/documents/upload",
+        "http://localhost:8081/api/documents/upload",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -103,12 +112,12 @@ const AddDocumentForm = () => {
             <ul className="absolute z-10 bg-white border border-gray-300 rounded-md w-full shadow-md">
               {filteredEmployees.map((emp) => (
                 <li
-                  key={emp.employeeId}
+                  key={emp.id}
                   className="p-2 cursor-pointer hover:bg-gray-200 flex justify-between"
                   onClick={() => handleSelectEmployee(emp)}
                 >
                   <span>{emp.employeeName}</span>
-                  <span className="text-gray-500">({emp.employeeId})</span>
+                  <span className="text-gray-500">({emp.id})</span>
                 </li>
               ))}
             </ul>
