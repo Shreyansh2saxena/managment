@@ -8,7 +8,7 @@ const AddEmployee = () => {
     phone: "",
     email: "",
     ifsc : '',
-    AccountNo :"",
+    accountNo :"",
     bankName: "",
     bankingEmpName: "",
 
@@ -31,7 +31,7 @@ const AddEmployee = () => {
         email: "",
         bankName: "",
         ifsc: "",
-        AccountNo: "",
+        accountNo: "",
         bankingEmpName: "",
         role: "Employee",
       });
@@ -137,9 +137,9 @@ const AddEmployee = () => {
           <div>
             <label className="block text-gray-700">Account Number</label>
             <input
-              type="AccountNo"
-              name="AccountNo"
-              value={employee.AccountNo}
+              type="accountNo"
+              name="accountNo"
+              value={employee.accountNo}
               onChange={handleChange}
               required
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"

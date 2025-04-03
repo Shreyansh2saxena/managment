@@ -34,16 +34,16 @@ export default function MonthSummaryList() {
   };
 
   return (
-    <div className="p-6 w-full max-w-4xl mx-auto shadow-md rounded-lg bg-white">
-      <h2 className="text-2xl font-bold mb-6 text-center">Employees' Month Summary</h2>
-      <div className="flex space-x-4 mb-4">
+    <div className="p-3 w-full max-w-5xl mx-auto shadow-md rounded-lg bg-white mt-16">
+      <h2 className="text-3xl font-bold mb-9 text-center">Employees' Month Summary</h2>
+      <div className=" flex justify-center space-x-4 mb-4">
         <input
           type="number"
           name="year"
           value={formData.year}
           onChange={handleChange}
           placeholder="Year (e.g., 2024)"
-          className="p-2 border rounded w-1/2"
+          className="p-2 border rounded-full w-1/3"
         />
         <input
           type="number"
@@ -51,12 +51,12 @@ export default function MonthSummaryList() {
           value={formData.month}
           onChange={handleChange}
           placeholder="Month (1-12)"
-          className="p-2 border rounded w-1/2"
+          className="p-2 border rounded-full w-1/3"
         />
         <button
           onClick={fetchSummaries}
           disabled={loading}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+          className="px-4 py-2 bg-blue-400 text-white rounded-full hover:bg-blue-800 transition duration-300"
         >
           {loading ? "Fetching..." : "Get Summary"}
         </button>

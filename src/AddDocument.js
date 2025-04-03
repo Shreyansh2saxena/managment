@@ -16,7 +16,7 @@ const AddDocumentForm = () => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get("http://localhost:8081/api/employees/getall");
-        console.log("Fetched Employees:", response.data);
+       // console.log("Fetched Employees:", response.data);
         
         // Validate employee data structure
         const validEmployees = response.data.filter(

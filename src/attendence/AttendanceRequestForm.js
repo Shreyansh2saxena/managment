@@ -259,20 +259,7 @@ const AttendanceRequestPage = () => {
             />
           </div>
           
-          <div className="flex items-end">
-            <button 
-              
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Apply Filter
-            </button>
-            <button 
-              
-              className="ml-2 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
-            >
-              Clear
-            </button>
-          </div>
+         
         </div>
         
         {/* Table */}
@@ -325,7 +312,7 @@ const AttendanceRequestPage = () => {
               <button 
                 onClick={() => setPage(Math.max(0, page - 1))}
                 disabled={page === 0}
-                className="px-3 py-1 border rounded mr-2 disabled:opacity-50"
+                className="px-3 py-1 bg-blue-500 border rounded mr-2 disabled:opacity-50"
               >
                 Previous
               </button>
@@ -333,7 +320,7 @@ const AttendanceRequestPage = () => {
               <button 
                 onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                 disabled={page >= totalPages - 1}
-                className="px-3 py-1 border rounded ml-2 disabled:opacity-50"
+                className="px-3 py-1 bg-blue-500 border rounded ml-2 disabled:opacity-50"
               >
                 Next
               </button>
