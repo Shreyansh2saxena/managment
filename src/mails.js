@@ -26,7 +26,7 @@ const EmployeeEmailForm = () => {
   const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
   const [hoveredTemplate, setHoveredTemplate] = useState('');
 
-  
+
   const letterTypes = ['Joining', 'Increment', 'Termination'];
   const API_BASE_URL = 'http://localhost:8081/api';
 
@@ -73,18 +73,18 @@ const EmployeeEmailForm = () => {
     try {
       setLoading(true);
       setError('');
-  
+
       const formData = new FormData();
       formData.append('templateName', selectedTemplate);
       formData.append('recipientEmail', employeeEmail);
       formData.append('employeeName', employeeName);
-  
+
       if (selectedLetterType === 'Increment' || selectedLetterType === 'Termination') {
         formData.append('oldSalary', oldSalary);
         formData.append('newSalary', newSalary);
         formData.append('effectiveDate', effectiveDate);
       }
-  
+
       if (selectedLetterType === 'Joining') {
         formData.append('joiningDate', joiningDate);
         formData.append('jobTitle', jobTitle);
@@ -95,13 +95,13 @@ const EmployeeEmailForm = () => {
         formData.append('hrEmail', hrEmail);
         formData.append('packages', packages);
       }
-  
+
       await axios.post(`${API_BASE_URL}/email/send`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       setSuccess('Email sent successfully!');
       resetForm();
     } catch (err) {
@@ -110,7 +110,7 @@ const EmployeeEmailForm = () => {
       setLoading(false);
     }
   };
-  
+
 
   const resetForm = () => {
     setEmployeeName('');
@@ -146,7 +146,7 @@ const EmployeeEmailForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <input
                 type="text"
@@ -157,7 +157,7 @@ const EmployeeEmailForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <input
                 type="date"
@@ -183,7 +183,7 @@ const EmployeeEmailForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <input
                 type="text"
@@ -194,7 +194,7 @@ const EmployeeEmailForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <input
                 type="date"
@@ -210,88 +210,88 @@ const EmployeeEmailForm = () => {
       case 'Joining':
         return (<>
           <div className="mb-4">
-          <input
-            type="date"
-            placeholder="joining date"
-            value={joiningDate}
-            onChange={(e) => setJoiningDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="job title"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="time"
-            placeholder="joining time"
-            value={joiningTime}
-            onChange={(e) => setJoiningTime(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="reporting manager"
-            value={reportingManager}
-            onChange={(e) => setReportingManager(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="hr name"
-            value={hrName}
-            onChange={(e) => setHrName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="hr email"
-            value={hrEmail}
-            onChange={(e) => setHrEmail(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="packages"
-            value={packages}
-            onChange={(e) => setpackage(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
-          />
-        </div>
-      </>
+            <input
+              type="date"
+              placeholder="joining date"
+              value={joiningDate}
+              onChange={(e) => setJoiningDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="job title"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="time"
+              placeholder="joining time"
+              value={joiningTime}
+              onChange={(e) => setJoiningTime(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="reporting manager"
+              value={reportingManager}
+              onChange={(e) => setReportingManager(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="department"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="hr name"
+              value={hrName}
+              onChange={(e) => setHrName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="hr email"
+              value={hrEmail}
+              onChange={(e) => setHrEmail(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="packages"
+              value={packages}
+              onChange={(e) => setpackage(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </>
         );
-      
+
       default:
         return null;
     }
@@ -311,19 +311,19 @@ const EmployeeEmailForm = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
       <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md">
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">Send Employee Email</h2>
-        
+
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4 text-sm">
             {error}
           </div>
         )}
-        
+
         {success && (
           <div className="bg-green-50 text-green-700 p-3 rounded-md mb-4 text-sm">
             {success}
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <input
@@ -335,7 +335,7 @@ const EmployeeEmailForm = () => {
               required
             />
           </div>
-          
+
           <div className="mb-4">
             <input
               type="email"
@@ -346,7 +346,7 @@ const EmployeeEmailForm = () => {
               required
             />
           </div>
-          
+
           <div className="mb-4">
             <select
               value={selectedLetterType}
@@ -363,7 +363,7 @@ const EmployeeEmailForm = () => {
               ))}
             </select>
           </div>
-          
+
           {selectedLetterType && (
             <div className="mb-4">
               <select
@@ -382,14 +382,14 @@ const EmployeeEmailForm = () => {
               </select>
             </div>
           )}
-          
+
           {/* Render additional fields based on letter type */}
           {renderAdditionalFields()}
-          
+
           <div className="mb-2">
-            <button 
-              type="submit" 
-              disabled={loading} 
+            <button
+              type="submit"
+              disabled={loading}
               className={`w-full py-2 px-4 rounded-md font-medium text-white ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition duration-200`}
             >
               {loading ? 'Sending...' : 'Send Email'}
@@ -398,20 +398,29 @@ const EmployeeEmailForm = () => {
         </form>
       </div>
       {selectedTemplate && templateBody && showTemplatePreview && (
-      <div className="absolute top-16 right-6 w-[320px] bg-white/70 border border-gray-200 rounded-lg shadow-lg p-4 text-sm text-gray-700 backdrop-blur-lg max-h-[400px] overflow-y-auto">
-        <h4 className="font-semibold mb-2">Template Preview</h4>
-        <div>{templateBody.replaceAll('<br>', '\n\n')}</div>
-        <button
-        onClick={() => setShowTemplatePreview(false)}
-        className="text-sm mt-2 border rounded-full px-3 bg-blue-300 text-gray-500 hover:text-red-500"
-      >
-        Close Preview
-      </button>
-      </div>
-    )}
+        <div className="absolute top-16 right-6 w-[320px] bg-white/70 border border-gray-200 rounded-lg shadow-lg p-4 text-sm text-gray-700 backdrop-blur-sm max-h-[400px] overflow-y-auto">
+          <h4 className="font-semibold mb-2">Template Preview</h4>
+          {/* <div style={{ whiteSpace: 'pre-wrap' }}>
+            {templateBody.replaceAll('<br>', '\n')}
+          </div> */}
+          {/* <div>
+            {templateBody.split('<br>').map((line, index) => (
+              <p key={index}>{line}</p>
+            ))}
+          </div> */}
+          <div dangerouslySetInnerHTML={{ __html: templateBody }} />
+
+          <button
+            onClick={() => setShowTemplatePreview(false)}
+            className="text-sm mt-2 border rounded-full px-3 bg-blue-300 text-gray-500 hover:text-red-500"
+          >
+            Close Preview
+          </button>
+        </div>
+      )}
     </div>
-    
-  
+
+
   );
 };
 
