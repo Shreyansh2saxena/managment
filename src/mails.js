@@ -409,6 +409,11 @@ const EmployeeEmailForm = () => {
             ))}
           </div> */}
           <div dangerouslySetInnerHTML={{ __html: templateBody }} />
+          {/* <div>
+            {templateBody.split('<br>').map((line, index) => (
+              <p key={index}>{line}</p>
+            ))}
+          </div> */}
 
           <button
             onClick={() => setShowTemplatePreview(false)}
