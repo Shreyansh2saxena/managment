@@ -200,7 +200,16 @@ const GetDocumentsByEmployee = () => {
         <td className="border p-3">{doc.employeeId}</td>
         <td className="border p-3">{employee ? employee.employeeName : "N/A"}</td>
         <td className="border p-3">{employee ? employee.role : "N/A"}</td>
-        <td className="border p-3">{doc.fileName}</td>
+        <td className="border p-3">
+    <a
+      href={`http://localhost:8081/api/documents/view/${doc.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline"
+    >
+      {doc.fileName}
+    </a>
+  </td>
         <td className="border p-3">{doc.typeOfDoc || "N/A"}</td>
         <td className="border p-3">{doc.createdDate}</td>
       </tr>

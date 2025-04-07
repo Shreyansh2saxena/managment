@@ -21,6 +21,8 @@ import POHRequest from "./attendence/POHRequestDashboard";
 import Attendecenew from "./attendence/Attendancenew";
 import MonthSummaryForm from "./attendence/Monthsummary";
 import Weekend from "./attendence/Weekendconf";
+import Mailtable from "./Mailtable";
+
 const Dashboard = () => {
   const [sidebarItems, setSidebarItems] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -64,7 +66,12 @@ const Dashboard = () => {
         { name: "Attendance Summary", path: "/attendance/month" },
         { name: "Set Weekend", path: "/attendance/weekend" },
         
-      ]
+      ],
+      Mails: [
+        { name: "Mail", path: "/mails" },
+        { name: "Mail Records", path: "/mails/records" },
+      ],
+
     };
     setSidebarItems(sidebarData[section] || []);
   };
@@ -99,6 +106,7 @@ const Dashboard = () => {
               
               {/* Mail Route */}
               <Route path="/mails" element={<MailPage />} /> 
+              <Route path="/mails/records" element={<Mailtable />} />
               
               {/* Vendor Routes */}
               <Route path="/vendors" element={<Vendor />} /> 

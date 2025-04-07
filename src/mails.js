@@ -408,16 +408,18 @@ const EmployeeEmailForm = () => {
       setLoading(true);
       setError('');
 
-      const formData = new FormData();
-      formData.append('recipientEmail', employeeEmail);
-      formData.append('emailBody', editableBody); // Send the preview content
-      formData.append('employeeName', employeeName);
-      formData.append('lettertype', selectedLetterType);
+      const payload = {
+        recipientEmail: employeeEmail,
+        emailBody: editableBody, // Send the preview content
+        employeeName: employeeName,
+        lettertype: selectedLetterType,
+        templateName: selectedTemplate,
+      };
 
 
-      await axios.post(`${API_BASE_URL}/email/send`, formData, {
+      await axios.post(`${API_BASE_URL}/email/send`, payload, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
 
