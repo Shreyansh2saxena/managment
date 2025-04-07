@@ -23,9 +23,9 @@ const EmployeeEmailForm = () => {
   const [success, setSuccess] = useState('');
   const [templateBody, setTemplateBody] = useState('');
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
-  const [previewPosition, setPreviewPosition] = useState({ top: 0, left: 0 });
-  const [hoveredTemplate, setHoveredTemplate] = useState('');
-
+  const [showEditView, setShowEditView] = useState(false);
+  const [editableBody, setEditableBody] = useState('');
+  
 
   const letterTypes = ['Joining', 'Increment', 'Termination'];
   const API_BASE_URL = 'http://localhost:8081/api';
@@ -39,7 +39,7 @@ const EmployeeEmailForm = () => {
   const fetchTemplatesByType = async (type) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/email/template/type/${type}`);
+      const response = await axios.get(`${API_BASE_URL}/email/templatetype/${type}`);
       setTemplates(response.data);
       setLoading(false);
     } catch (err) {
@@ -47,6 +47,32 @@ const EmployeeEmailForm = () => {
       setLoading(false);
     }
   };
+
+  const generatePreviewContent = () => {
+    let replaced = templateBody;
+    const placeholders = {
+      '[employeeName]': employeeName,
+      '[employeeEmail]': employeeEmail,
+      '[oldSalary]': oldSalary,
+      '[newSalary]': newSalary,
+      '[effectiveDate]': effectiveDate,
+      '[joiningDate]': joiningDate,
+      '[jobTitle]': jobTitle,
+      '[joiningTime]': joiningTime,
+      '[reportingManager]': reportingManager,
+      '[department]': department,
+      '[hrName]': hrName,
+      '[hrEmail]': hrEmail,
+      '[packages]': packages,
+    };
+  
+    Object.keys(placeholders).forEach((key) => {
+      replaced = replaced.replaceAll(key, placeholders[key] || '');
+    });
+  
+    return replaced;
+  };
+  
 
 
   const fetchTemplateBody = async (templateName) => {
@@ -64,52 +90,7 @@ const EmployeeEmailForm = () => {
 
 
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!employeeName || !employeeEmail || !selectedTemplate) {
-      setError('Please fill all required fields');
-      return;
-    }
-    try {
-      setLoading(true);
-      setError('');
-
-      const formData = new FormData();
-      formData.append('templateName', selectedTemplate);
-      formData.append('recipientEmail', employeeEmail);
-      formData.append('employeeName', employeeName);
-
-      if (selectedLetterType === 'Increment' || selectedLetterType === 'Termination') {
-        formData.append('oldSalary', oldSalary);
-        formData.append('newSalary', newSalary);
-        formData.append('effectiveDate', effectiveDate);
-      }
-
-      if (selectedLetterType === 'Joining') {
-        formData.append('joiningDate', joiningDate);
-        formData.append('jobTitle', jobTitle);
-        formData.append('joiningTime', joiningTime);
-        formData.append('reportingManager', reportingManager);
-        formData.append('department', department);
-        formData.append('hrName', hrName);
-        formData.append('hrEmail', hrEmail);
-        formData.append('packages', packages);
-      }
-
-      await axios.post(`${API_BASE_URL}/email/send`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setSuccess('Email sent successfully!');
-      resetForm();
-    } catch (err) {
-      setError('Failed to send email');
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
 
   const resetForm = () => {
@@ -324,7 +305,7 @@ const EmployeeEmailForm = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           <div className="mb-4">
             <input
               type="text"
@@ -387,16 +368,79 @@ const EmployeeEmailForm = () => {
           {renderAdditionalFields()}
 
           <div className="mb-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-2 px-4 rounded-md font-medium text-white ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} transition duration-200`}
-            >
-              {loading ? 'Sending...' : 'Send Email'}
-            </button>
-          </div>
+          <button
+  type="button"
+  onClick={() => {
+    const preview = generatePreviewContent();
+    setEditableBody(preview);
+    setShowEditView(true);
+  }}
+  className="w-full py-2 px-4 rounded-md font-medium text-white bg-green-600 hover:bg-green-700 transition duration-200"
+>
+  Preview Email
+</button>
+
+</div>
+
         </form>
       </div>
+
+      {showEditView && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-md w-[90%] max-w-3xl max-h-[90vh] overflow-y-auto">
+      <h3 className="text-lg font-semibold mb-3">Email Preview</h3>
+      <textarea
+        value={editableBody.replace(/<br\s*\/?>/gi, '\n')}
+        onChange={(e) => setEditableBody(e.target.value)}
+        rows={25}
+        className="w-full p-3 border border-gray-300 rounded-md mb-4 font-mono text-sm"
+      />
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowEditView(false)}
+          className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+  onClick={async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const formData = new FormData();
+      formData.append('recipientEmail', employeeEmail);
+      formData.append('emailBody', editableBody); // Send the preview content
+      formData.append('employeeName', employeeName);
+      formData.append('lettertype', selectedLetterType);
+
+
+      await axios.post(`${API_BASE_URL}/email/send`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setSuccess('Email sent successfully!');
+      resetForm();
+      setShowEditView(false);
+    } catch (err) {
+      setError('Failed to send email');
+    } finally {
+      setLoading(false);
+    }
+  }}
+  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+>
+  {loading ? 'Sending...' : 'Send Email'}
+</button>
+
+      </div>
+    </div>
+  </div>
+)}
+
+
       {selectedTemplate && templateBody && showTemplatePreview && (
         <div className="absolute top-16 right-6 w-[320px] bg-white/70 border border-gray-200 rounded-lg shadow-lg p-4 text-sm text-gray-700 backdrop-blur-sm max-h-[400px] overflow-y-auto">
           <h4 className="font-semibold mb-2">Template Preview</h4>
