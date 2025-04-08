@@ -7,6 +7,7 @@ const AddIssuedDoc = () => {
     employeeName: "",
     typeOfDoc: "",
     issuedBy: "",
+    empEmail: "",
     file: null,
   });
 
@@ -52,6 +53,7 @@ const AddIssuedDoc = () => {
       ...prev,
       employeeName: employee.employeeName,
       employeeId: employee.id,
+      empEmail: employee.email,
     }));
     setFilteredEmployees([]); // Hide suggestions after selection
   };
@@ -84,6 +86,7 @@ const AddIssuedDoc = () => {
       const formDataObj = new FormData();
       formDataObj.append("employeeId", formData.employeeId);
       formDataObj.append("employeeName", formData.employeeName);
+      formDataObj.append("empEmail", formData.empEmail);
       formDataObj.append("typeOfDoc", formData.typeOfDoc);
       formDataObj.append("issuedBy", formData.issuedBy);
       formDataObj.append("file", formData.file);
