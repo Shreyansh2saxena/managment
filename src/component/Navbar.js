@@ -179,6 +179,15 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
                       Attendance New
                     </Link>
                   </li>
+                  <li>
+                    <Link 
+                      to="/attendance/setleave" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      setleave
+                    </Link>
+                  </li>
                 </ul>
               )}
             </li>

@@ -283,9 +283,9 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
             <Text style={[styles.tableHeader, { flex: 1 }]}>Qty</Text>
             <Text style={[styles.tableHeader, { flex: 2 }]}>HSN/SAC</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>Rate</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>SGST</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>CGST</Text>
-            <Text style={[styles.tableHeader, { flex: 1 }]}>Igst</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>SGST %</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>CGST %</Text>
+            <Text style={[styles.tableHeader, { flex: 1 }]}>Igst %</Text>
             <Text style={[styles.tableHeader, { flex: 1 }]}>Amount</Text>
           </View>
 
@@ -319,15 +319,15 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>SGST</Text>
-          <Text style={styles.totalValue}>{totals.sgst.toFixed(2)}%</Text>
+          <Text style={styles.totalValue}>{totals.sgst.toFixed(2)}</Text>
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>CGST</Text>
-          <Text style={styles.totalValue}>{totals.cgst.toFixed(2)}%</Text>
+          <Text style={styles.totalValue}>{totals.cgst.toFixed(2)}</Text>
         </View>
         <View style={styles.totalsSection}>
           <Text style={styles.totalLabel}>igst</Text>
-          <Text style={styles.totalValue}>{totals.igst.toFixed(2)}%</Text>
+          <Text style={styles.totalValue}>{totals.igst.toFixed(2)}</Text>
         </View>
         <View style={styles.grandTotal}>
           <Text style={styles.grandTotalLabel}>TOTAL</Text>

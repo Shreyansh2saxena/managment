@@ -72,24 +72,28 @@ const ViewIssuedDocs = () => {
   };
 
   // Handle employee name search and suggestions
-  const handleEmployeeSearch = (e) => {
-    const query = e.target.value;
-    setSearchEmployeeName(query);
-    
-    if (query.trim() === "") {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-    
-    const filteredSuggestions = allEmployees.filter(
-      employee => employee.name.toLowerCase().includes(query.toLowerCase()) ||
-                 employee.id.toString().includes(query)
-    );
-    
-    setSuggestions(filteredSuggestions);
-    setShowSuggestions(true);
-  };
+const handleEmployeeSearch = (e) => {
+  const query = e.target.value;
+  setSearchEmployeeName(query);
+
+  if (query.trim() === "") {
+    setSuggestions([]);
+    setShowSuggestions(false);
+    return;
+  }
+
+  const filteredSuggestions = allEmployees.filter(employee => {
+    const name = employee.name ?? "";
+    const id = employee.employeeId ?? "";
+
+    return name.toLowerCase().includes(query.toLowerCase()) ||
+           id.toString().includes(query);
+  });
+
+  setSuggestions(filteredSuggestions);
+  setShowSuggestions(true);
+};
+
 
   // Select suggestion
   const selectSuggestion = (employee) => {
@@ -134,7 +138,7 @@ const ViewIssuedDocs = () => {
                   <div
                     key={index}
                     className="p-2 hover:bg-blue-100 cursor-pointer"
-                    onClick={() => selectSuggestion(employee)}
+                    onMouseDown={() => selectSuggestion(employee)}
                   >
                     <span className="font-medium">{employee.name}</span>
                     <span className="text-gray-500 ml-2">(ID: {employee.id})</span>

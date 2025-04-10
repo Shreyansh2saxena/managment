@@ -22,6 +22,7 @@ import Attendecenew from "./attendence/Attendancenew";
 import MonthSummaryForm from "./attendence/Monthsummary";
 import Weekend from "./attendence/Weekendconf";
 import Mailtable from "./Mailtable";
+import Setleave from "./attendence/Setleave";
 
 const Dashboard = () => {
   const [sidebarItems, setSidebarItems] = useState([]);
@@ -65,6 +66,7 @@ const Dashboard = () => {
         { name: "POH Request", path: "/attendance/poh-request" },
         { name: "Attendance Summary", path: "/attendance/month" },
         { name: "Set Weekend", path: "/attendance/weekend" },
+        { name: "appoint leave", path: "/attendance/setleave" },
         
       ],
       Mails: [
@@ -121,6 +123,7 @@ const Dashboard = () => {
               <Route path="/attendance/poh-request" element={<POHRequest />} />
               <Route path="/attendance/month" element={<MonthSummaryForm/>} />
               <Route path="/attendance/weekend" element={<Weekend/>} />
+              <Route path="/attendance/setleave" element={<Setleave/>} />
             </Routes>
           </div>
         </div>

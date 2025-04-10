@@ -12,12 +12,12 @@ const EmailListPage = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [page,setPage] = useState(0);
       const [totPage , settotpage] = useState(1);
-      const [size] = useState(10);
+      const size = 10; 
   
 
   useEffect(() => {
     fetchEmails();
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     if (emails.length > 0) {
@@ -27,13 +27,10 @@ const EmailListPage = () => {
 
   const fetchEmails = async () => {
     try {
-      const response = await axios.get('http://localhost:8081/api/email/mailrecordpage/getall?page=${page}&size=${size}');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      setEmails(data.content);
-      setFilteredEmails(data.content);
+      const response = await axios.get(`http://localhost:8081/api/email/mailrecordpage/getall?page=${page}&size=${size}`);
+      const data = response.data;
+         setEmails(data.content);
+          setFilteredEmails(data.content);
     } catch (err) {
       setError('Failed to fetch emails.');
       console.error(err);
