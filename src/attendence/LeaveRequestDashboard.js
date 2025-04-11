@@ -40,6 +40,31 @@ const LeaveRequestForm = () => {
     }
   }, [employeeId]);
 
+  const hrej = async (id) => {
+    try {
+      const res = await axios.put(`http://localhost:8081/api/leaves/reject-leave/${id}?managerId=1`);
+      showMessage('Leave rejected successfully', 'success');
+      ftable(); // Refresh leave table
+    } catch (error) {
+      console.error('Error rejecting leave:', error);
+      showMessage('Failed to reject leave', 'error');
+    }
+  };
+  const happ = async (id) => {
+    try {
+      const res = await axios.put(`http://localhost:8081/api/leaves/approve-leave/${id}?managerId=1`);
+      showMessage('Leave approved successfully', 'success');
+      ftable(); // Refresh leave table
+    } catch (error) {
+      console.error('Error approving leave:', error);
+      showMessage('Failed to approve leave', 'error');
+    }
+  };
+  
+
+
+
+
   // Fetch employee data
   const fetchEmployeeData = async () => {
     try {
@@ -111,6 +136,7 @@ const LeaveRequestForm = () => {
       
       const leaveRequest = {
         employeeId: parseInt(employeeId),
+        employeeName,
         leaveType,
         isHalfDay,
         halfDayType: isHalfDay ? halfDayType : null,
@@ -143,6 +169,8 @@ const LeaveRequestForm = () => {
   
   // Reset form
   const resetForm = () => {
+    setEmployeeId('');
+    setEmployeeName('');
     setLeaveType('');
     setLeaveDate(new Date().toISOString().split('T')[0]);
     setIsHalfDay(false);
@@ -317,17 +345,20 @@ const LeaveRequestForm = () => {
                 <thead className="bg-gray-100">
                     <tr>
                         <th className="border px-4 py-2">Employee ID</th>
-                        <th className="border px-4 py-2">Employee Name</th>
-                        <th className="border px-4 py-2">Leave Type</th>
+                        <th className="border px-4 py-2">Employee Nmae</th>
+                        <th className="border px-4 py-2">Leave type</th>
                         <th className="border px-4 py-2">Leave Date</th>
+                        <th className="border px-4 py-2">Status</th>
                         <th className="border px-4 py-2">Half Day</th>
                         <th className="border px-4 py-2">Reason</th>
+                        <th className="border px-4 py-2">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 {leavedata.map((emp, index) => (
             <tr key={emp.id || index} className="hover:bg-gray-50">
               <td className="border px-4 py-2">{emp.employeeId}</td>
+              <td className="border px-4 py-2">{emp.employeeName}</td>
               <td className="border px-4 py-2">{emp.leaveType}</td>
               <td className="border px-4 py-2">{emp.leaveDate}</td>
               <td className="border px-4 py-2">{emp.leaveStatus}</td>
@@ -336,6 +367,13 @@ const LeaveRequestForm = () => {
                   ? (emp.halfDayType === 'first' ? 'First Half' : emp.halfDayType === 'second' ? 'Second Half' : 'Half Day')
                   : 'Full Day'}
               </td>
+              <td className="border px-4 py-2">{emp.reason}</td>
+              <td className="p-2 border flex justify-center items-center ">
+                      <span className='flex gap-4'>
+                        <button onClick={() => happ(emp.employeeId)} className="bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-800 mr-2">Approve</button>
+                        <button onClick={() => hrej(emp.employeeId)} className="bg-red-500 text-white px-2 py-1 rounded-full hover:bg-red-600">Reject</button>
+                      </span> 
+                    </td>
             </tr>
           ))}
                 </tbody>
