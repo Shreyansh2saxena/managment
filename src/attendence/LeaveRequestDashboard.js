@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
 const LeaveRequestForm = () => {
   // Form state
   const [employeeId, setEmployeeId] = useState('');
@@ -10,6 +11,7 @@ const LeaveRequestForm = () => {
   const [isHalfDay, setIsHalfDay] = useState(false);
   const [halfDayType, setHalfDayType] = useState('First Half');
   const [reason, setReason] = useState('');
+  const [leavedata, setLeavedata] = useState([]);
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -74,6 +76,22 @@ const LeaveRequestForm = () => {
     }
   };
 
+  const ftable = async ()=>{
+    try {
+      const res = await axios.get('http://localhost:8081/api/leaves/all');
+      setLeavedata(res.data.content)
+      console.log("Fetched Leave Data:", res.data);
+    }
+    catch (error) {
+      console.error('Error fetching leave data:', error);
+      alert('Error fetching leave data. Please try again later.');
+    }
+  }
+
+  useEffect(()=>{
+    ftable();
+  },[])
+
   // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -105,6 +123,7 @@ const LeaveRequestForm = () => {
       
       // Reset form after successful submission
       resetForm();
+      ftable();
       
       setLoading(false);
     } catch (error) {
@@ -133,6 +152,7 @@ const LeaveRequestForm = () => {
   };
 
   return (
+    <div>
     <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
       <h1 className="text-2xl font-bold text-center mb-6">Leave Request</h1>
       
@@ -288,6 +308,49 @@ const LeaveRequestForm = () => {
         </button>
       </form>
     </div>
+    <div className="w-full flex jsutify-center mt-10">
+      {leavedata.length > 0 ? (
+    <div className="bg-white p-6 rounded-xl shadow-lg">
+        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">Employees Leave Info</h3>
+        <div className="overflow-x-auto">
+            <table className="w-full table-auto border border-gray-300 text-center rounded-lg overflow-hidden">
+                <thead className="bg-gray-100">
+                    <tr>
+                        <th className="border px-4 py-2">Employee ID</th>
+                        <th className="border px-4 py-2">Employee Name</th>
+                        <th className="border px-4 py-2">Leave Type</th>
+                        <th className="border px-4 py-2">Leave Date</th>
+                        <th className="border px-4 py-2">Half Day</th>
+                        <th className="border px-4 py-2">Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {leavedata.map((emp, index) => (
+            <tr key={emp.id || index} className="hover:bg-gray-50">
+              <td className="border px-4 py-2">{emp.employeeId}</td>
+              <td className="border px-4 py-2">{emp.leaveType}</td>
+              <td className="border px-4 py-2">{emp.leaveDate}</td>
+              <td className="border px-4 py-2">{emp.leaveStatus}</td>
+              <td className="border px-4 py-2">
+                {emp.halfDay
+                  ? (emp.halfDayType === 'first' ? 'First Half' : emp.halfDayType === 'second' ? 'Second Half' : 'Half Day')
+                  : 'Full Day'}
+              </td>
+            </tr>
+          ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+) : (
+    <div className="bg-white p-6 rounded-xl shadow-lg flex items-center justify-center h-full">
+        <p className="text-gray-500 text-lg">No leave data available</p>
+    </div>
+)}
+</div>
+</div>
+               
+   
   );
 };
 

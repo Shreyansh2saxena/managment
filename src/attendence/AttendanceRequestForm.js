@@ -272,6 +272,8 @@ const AttendanceRequestPage = () => {
                 <th className="p-2 border">Date</th>
                 <th className="p-2 border">Requested Time</th>
                 <th className="p-2 border">Status</th>
+                <th className="p-2 border">action</th>
+
                 <th className="p-2 border">Admin Remarks</th>
               </tr>
             </thead>
@@ -283,6 +285,13 @@ const AttendanceRequestPage = () => {
                     <td className="p-2 border">{request.employeeId}</td>
                     <td className="p-2 border">{request.date}</td>
                     <td className="p-2 border">{request.requestedCheckOutTime}</td>
+                    <td td className="p-2 border">
+                      <span>
+                        <button onClick={happ} className="bg-blue-500 text-white px-2 py-1 rounded-full hover:bg-blue-600 mr-2">Approve</button>
+                        <button onClick={hrej} className="bg-red-400 text-white px-2 py-1 rounded-full hover:bg-red-600">Reject</button>
+                        </span> 
+
+                    </td>
                     <td className="p-2 border">
                       <span 
                         className={`px-2 py-1 rounded text-xs ${
