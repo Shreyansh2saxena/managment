@@ -64,6 +64,29 @@ const AttendanceRequestPage = () => {
     }
   };
 
+  const happ = async (id) => {
+    try {
+      const res = await axios.put(`http://localhost:8081/api/attendance-requests/${id}/approve`);
+      console.log("Approving request", id);
+      fetchAttendanceRequests();
+    }catch (error) { 
+      console.error('Error approving attendance request:', error);
+      alert('Error approving attendance request. Please try again.');
+    }
+  };
+
+  const hrej = async(id)=>{
+    try {
+      const res = await axios.put(`http://localhost:8081/api/attendance-requests/${id}/reject`);
+      console.log("reject request", id);
+      fetchAttendanceRequests();
+    }catch (error) { 
+      console.error('Error rejecting attendance request:', error);
+      alert('Error rejecting attendance request. Please try again.');
+    }
+  }
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -271,8 +294,10 @@ const AttendanceRequestPage = () => {
                 <th className="p-2 border">Employee ID</th>
                 <th className="p-2 border">Date</th>
                 <th className="p-2 border">Requested Time</th>
+                <th className="p-2 border">Action</th>
                 <th className="p-2 border">Status</th>
-                <th className="p-2 border">Admin Remarks</th>
+
+                
               </tr>
             </thead>
             <tbody>
@@ -283,18 +308,18 @@ const AttendanceRequestPage = () => {
                     <td className="p-2 border">{request.employeeId}</td>
                     <td className="p-2 border">{request.date}</td>
                     <td className="p-2 border">{request.requestedCheckOutTime}</td>
-                    <td className="p-2 border">
-                      <span 
-                        className={`px-2 py-1 rounded text-xs ${
-                          request.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-                          request.status === 'Rejected' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {request.status}
-                      </span>
+                    <td className="p-2 border flex justify-center items-center ">
+                      <span className='flex gap-4'>
+                        <button onClick={() => happ(request.id)} className="bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-800 mr-2">Approve</button>
+                        <button onClick={() => hrej(request.id)} className="bg-red-500 text-white px-2 py-1 rounded-full hover:bg-red-600">Reject</button>
+                      </span> 
                     </td>
-                    <td className="p-2 border">{request.adminRemarks || '-'}</td>
+                    <td className="p-2 border">
+                      
+                        {request.status}
+                  
+                    </td>
+                    
                   </tr>
                 ))
               ) : (

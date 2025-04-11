@@ -8,13 +8,13 @@ const initialBillState = {
   vendorName: "",
   customer: null,
   customerName: "",
-  billDate: new Date().toISOString().split('T')[0], // Default to today
+  billDate: new Date().toISOString().split('T')[0], // aaj ke din ke liye
   customerAddress: "",
   customerState: "",
   customerGstin: "",
   vaddress: "",
   vendorState: "",
-  billItems: [
+  GSTBillItems: [
     { 
       description: "", 
       hsnSac: "", 
@@ -163,31 +163,31 @@ const App = () => {
 
   const handleItemChange = (index, e) => {
     const { name, value } = e.target;
-    const items = [...bill.billItems];
+    const items = [...bill.GSTBillItems];
     items[index][name] = value;
-    setBill({ ...bill, billItems: items });
+    setBill({ ...bill, GSTBillItems: items });
   };
 
   const addBillItem = () => {
     setBill({
       ...bill,
-      billItems: [
-        ...bill.billItems,
-        { description: "", hsnSac: "", quantity: "", rate: "", sgstRate: "0", cgstRate: "0", igstRate: "0" },
+      GSTBillItems: [
+        ...bill.GSTBillItems,
+        { description: "", hsnSac: "", quantity: "", rate: "", sgstRate: "", cgstRate: "", igstRate: "" },
       ],
     });
   };
 
   const removeBillItem = (index) => {
-    const items = [...bill.billItems];
+    const items = [...bill.GSTBillItems];
     items.splice(index, 1);
-    setBill({ ...bill, billItems: items });
+    setBill({ ...bill, GSTBillItems: items });
   };
 
   const getCalculatedBill = () => {
     let totalAmount = 0;
     let totalQuantity = 0;
-    const items = bill.billItems.map((item) => {
+    const items = bill.GSTBillItems.map((item) => {
       const quantity = parseInt(item.quantity || "0");
       const rate = parseFloat(item.rate || "0");
       const sgstRate = parseFloat(item.sgstRate/100 || "0");
@@ -211,42 +211,64 @@ const App = () => {
         totalAmount: itemTotal
       };
     });
-    return { ...bill, billItems: items, totalAmount, totalQuantity };
+    return { ...bill, GSTBillItems: items, totalAmount, totalQuantity };
   };
 
-  const saveBill = async () => {
-    try {
-      const calculatedBill = getCalculatedBill();
-      const billToSave = {
-        ...calculatedBill,
-        vendor: bill.vendor,  // Explicitly include vendor ID
-        customer: bill.customer,  // Explicitly include customer ID
-        vendorName: bill.vendorName,
-        customerName: bill.customerName
-      };
-      
-      await axios.post("http://localhost:8081/api/GSTbills", billToSave);
-      fetchBills();
-      // Reset the bill form to the initial state after saving
-      setBill({
-        ...initialBillState,
-        billItems: [{
-          description: "", 
-          hsnSac: "", 
-          quantity: "", 
-          rate: "", 
-          sgstRate: "", 
-          cgstRate: "", 
-          igstRate: ""
-        }]
-      });
-      alert("Bill saved successfully!");
-    } catch (error) {
-      console.error("Error saving bill:", error);
-      alert("Failed to save bill. Please try again.");
-    }
-  };
+const saveBill = async () => {
+  try {
+    const calculatedBill = getCalculatedBill();
+    
+    // Create bill object with the correct structure
+    const billToSave = {
+      vendor: bill.vendor,
+      vendorName: bill.vendorName,
+      customer: bill.customer,
+      customerName: bill.customerName,
+      billDate: calculatedBill.billDate,
+      paymentStatus: calculatedBill.paymentStatus,
+      billType: "GST",
+      paidDate: calculatedBill.paidDate,
+      gstAmount: calculatedBill.gstAmount,
+      totalAmount: calculatedBill.totalAmount,
+      totalQuantity: calculatedBill.totalQuantity,
+      gSTBillItems: calculatedBill.GSTBillItems?.map(item => ({
+        description: item.description,
+        hsnSac: item.hsnSac,
+        quantity: item.quantity,
+        rate: item.rate,
+        sgstRate: item.sgstRate,
+        cgstRate: item.cgstRate,
+        igstRate: item.igstRate,
+        sgstAmount: item.sgstAmount,
+        cgstAmount: item.cgstAmount,
+        igstAmount: item.igstAmount,
+        totalAmount: item.totalAmount
+      })) || []
+    };
 
+    await axios.post("http://localhost:8081/api/GSTbills/gst", billToSave);
+    fetchBills();
+    
+    // Reset the bill form to the initial state after saving
+    setBill({
+      ...initialBillState,
+      GSTBillItems: [{
+        description: "",
+        hsnSac: "",
+        quantity: "",
+        rate: "",
+        sgstRate: "",
+        cgstRate: "",
+        igstRate: ""
+      }]
+    });
+    
+    alert("Bill saved successfully!");
+  } catch (error) {
+    console.error("Error saving bill:", error);
+    alert("Failed to save bill. Please try again.");
+  }
+};
   const deleteBill = async (id) => {
     if (window.confirm("Are you sure you want to delete this bill?")) {
       try {
@@ -263,46 +285,62 @@ const App = () => {
 
 
   // Function to Generate PDF
-  const handleViewPDF = async (bill) => {
-    console.log("Received Bill Object:", bill);
-    
-   
-       
-
+  const handleViewPDF = async (billId) => {
     try {
-        // Fetch vendor details
-        const vendorResponse = await axios.get(`http://localhost:8081/api/vendors/${bill.vendor}`);
-        const vendor = vendorResponse.data || {};
+        // Fetch the complete bill data
+        const billResponse = await axios.get(`http://localhost:8081/api/GSTbills/bill/${billId}`);
+        const bill = billResponse.data;
 
-        // Fetch customer details
-        const customerResponse = await axios.get(`http://localhost:8081/api/customers/${bill.customer}`);
-        const customer = customerResponse.data || {};
+        console.log("Received Bill Object:", bill);
 
-        // Fetch vendor logo
-        const logoUrl = await fetchVendorLogo(bill.vendor);
+        // Prepare vendor details
+        const vendor = {
+            name: bill.vendorName || "Vendor Name",
+            gstin: bill.vendorGstNumber || "GSTIN",
+            address: bill.vendorAddress || "Vendor Address",
+            state: bill.vendorState || "State",
+            contactNumber: bill.vendorContactNumber || "Contact Number",
+            email: bill.vendorEmail || "Email",
+            panNumber: bill.vendorPanNumber || "PAN",
+            bankName: bill.vendorBankName || "Bank Name",
+            accountNumber: bill.vendorAccountNumber || "Account Number",
+            ifscCode: bill.vendorIfscCode || "IFSC",
+        };
 
-        // Prepare the invoice data
+        // Prepare customer details
+        const customer = {
+            name: bill.customerName || "Customer Name",
+            gstin: bill.customerGstNumber || "GSTIN",
+            address: bill.customerAddress || "Customer Address",
+            state: bill.customerState || "State",
+            contactNumber: bill.customerContactNumber || "Contact Number",
+            email: bill.customerEmail || "Email",
+        };
+
+        // Fetch vendor logo (assuming you have this function already)
+        const logoUrl = await fetchVendorLogo(bill.vendorId);
+
+        // Prepare invoice data
         const invoiceData = {
             invoiceNumber: bill.billNumber?.toString() || "N/A",
             invoiceDate: bill.billDate || new Date().toLocaleDateString(),
             company: {
-                name: vendor.name || "Company Name",
-                gstin: vendor.gstNumber || "GSTIN",
-                address: vendor.address || "Vendor Address",
-                state: vendor.state || "State",
-                country: vendor.country || "Country",
+                name: vendor.name,
+                gstin: vendor.gstin,
+                address: vendor.address,
+                state: vendor.state,
+                country: "India",
             },
             client: {
-                name: customer.name || "Customer Name",
-                gstin: customer.gstNumber || "Customer GSTIN",
-                address: customer.address || "Customer Address",
-                city: customer.city || "City",
-                state: customer.state || "State",
-                country: customer.country || "Country",
+                name: customer.name,
+                gstin: customer.gstin,
+                address: customer.address,
+                state: customer.state,
+                country: "India",
             },
-            items: bill.billItems.map((item) => {
-                if (!item) return {}; // Avoid undefined errors for individual items
-                
+            items: bill.items.map((item) => {
+                if (!item) return {}; // Avoid undefined items
+
                 const quantity = parseFloat(item.quantity) || 0;
                 const rate = parseFloat(item.rate) || 0;
                 const amount = quantity * rate;
@@ -318,13 +356,13 @@ const App = () => {
                     amount,
                 };
             }),
-            notes: "Thank you for your business!",
+            notes: bill.description || "Thank you for your business!",
             totalAmount: bill.totalAmount || 0,
         };
 
         // Generate PDF blob
         const pdfBlob = await pdf(<GSTInvoice invoice={invoiceData} vendorLogo={logoUrl} />).toBlob();
-        
+
         // Create a URL for the blob
         const pdfUrl = URL.createObjectURL(pdfBlob);
 
@@ -349,6 +387,7 @@ const App = () => {
         }
     }
 };
+
 
 
   
@@ -461,7 +500,7 @@ const App = () => {
             <div></div>
           </div>
 
-          {bill.billItems.map((item, index) => (
+          {bill.GSTBillItems.map((item, index) => (
             <div key={index} className="grid grid-cols-8 gap-2 mb-2">
               <input
                 type="text"
@@ -522,7 +561,7 @@ const App = () => {
               <button
                 onClick={() => removeBillItem(index)}
                 className="bg-red-400 text-white px-3 py-2 rounded-full"
-                disabled={bill.billItems.length === 1}
+                disabled={bill.GSTBillItems.length === 1}
               >
                 Remove
               </button>
@@ -575,7 +614,7 @@ const App = () => {
                     <td className="p-2 border">
                       <div className="flex space-x-3">
                         <button 
-                          onClick={() => handleViewPDF(b)} 
+                          onClick={() => handleViewPDF(b.billNumber)} 
                           className="bg-blue-500 text-white px-4 py-1  rounded-full"
                           title="View PDF"
                         >

@@ -181,7 +181,7 @@ const VendorForm = () => {
         placeholder="Search by ID"
         className="border p-2 w-full my-2"
       />
-      <button onClick={handleSearch} className="bg-gray-500 text-white p-2 rounded mb-4">Search</button>
+      <button onClick={handleSearch} className="bg-blue-500 text-white p-2 rounded mb-4">Search</button>
 
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse border border-gray-200">
@@ -195,15 +195,15 @@ const VendorForm = () => {
           </thead>
           <tbody>
             {vendors.map((v) => (
-              <tr key={v.id} className="border">
+              <tr key={v.id} className="border ">
                 <td className="border p-2">{v.id}</td>
                 <td className="border p-2">{v.name}</td>
                 <td className="border p-2">
                   <img src={`http://localhost:8081/api/vendors/${v.id}/image`} alt={v.name} className="w-16 h-16 object-cover" />
                 </td>
-                <td className="border p-2">
-                  <button onClick={() => handleEdit(v)} className="bg-yellow-500 text-white p-1 rounded mx-2">Edit</button>
-                  <button onClick={() => handleDelete(v.id)} className="bg-red-500 text-white p-1 rounded mx-2">Delete</button>
+                <td className=" mt-2 p-2 flex justify-center gap-4">
+                  <button onClick={() => handleEdit(v)} className="bg-yellow-500 text-white px-3 rounded-full mx-2">Edit</button>
+                  <button onClick={() => handleDelete(v.id)} className="bg-red-500 text-white px-2 rounded-full mx-2">Delete</button>
                 </td>
               </tr>
             ))}

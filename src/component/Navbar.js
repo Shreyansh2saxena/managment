@@ -39,7 +39,7 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
           <Link to="/" onClick={() => onNavClick("Employees")} className="px-4 hover:text-gray-300">Employees</Link>
           <Link to="/" onClick={() => onNavClick("Documents")} className="px-4 hover:text-gray-300">Documents</Link>
           <Link to="/" onClick={() => onNavClick("Issued Documents")} className="px-4 hover:text-gray-300">Issued Documents</Link>
-          <Link to="/mails" className="px-4 hover:text-gray-300 font-semibold">Mail</Link> 
+          <Link to="/" onClick={() => onNavClick("Mails")} className="px-4 hover:text-gray-300">Mails</Link>
           <Link to="/" onClick={() => onNavClick("Vendor")} className="px-4 hover:text-gray-300">Vendor</Link>
           <Link to="/" onClick={() => onNavClick("Attendance")} className="px-4 hover:text-gray-300">Attendance</Link>
         </div>
@@ -96,8 +96,24 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
                 </ul>
               )}
             </li>
+             {/* Mails Submenu */}
+             <li>
+              <button className="w-full text-left py-2 hover:bg-gray-700" onClick={() => toggleSubMenu("Mails")}>
+                Mails {activeMenu === "Mails" ? "▲" : "▼"}
+              </button>
+              {activeMenu === "Mails" && (
+                <ul className="ml-4 bg-gray-800 p-2 rounded-md">
+                  <li>
+                    <Link to="/mails" className="block py-2 hover:bg-gray-700" onClick={() => setMobileMenuOpen(false)}>Mail</Link>
+                  </li>
+                  <li>
+                    <Link to="/mails/records" className="block py-2 hover:bg-gray-700" onClick={() => setMobileMenuOpen(false)}>Mail Records</Link>
+                  </li>
+                </ul>
+              )}
+            </li>
             <li>
-              <Link to="/mails" className="block py-2 hover:bg-gray-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>Mail</Link>
+              
               <Link to="/Vendor" className="block py-2 hover:bg-gray-700 font-semibold" onClick={() => setMobileMenuOpen(false)}>bill</Link>
             </li>
             <li>
@@ -161,6 +177,15 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick }) => {
                       onClick={() => handleSubOptionClick("Attendance")}
                     >
                       Attendance New
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/attendance/setleave" 
+                      className="block py-2 hover:bg-gray-700" 
+                      onClick={() => handleSubOptionClick("Attendance")}
+                    >
+                      setleave
                     </Link>
                   </li>
                 </ul>

@@ -268,18 +268,18 @@ const POHRequestForm = () => {
                   }`}>
                     {poh.status}
                   </td>
-                  <td className="px-4 py-2 border">
+                  <td className="px-4  py-2 border">
                     {poh.status === 'Pending' && (
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-6">
                         <button 
                           onClick={() => handleApprove(poh.id)} 
-                          className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                          className="bg-green-500 text-white px-2 py-1 rounded-full hover:bg-green-600"
                         >
                           Approve
                         </button>
                         <button 
                           onClick={() => handleReject(poh.id)} 
-                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                          className="bg-red-500 text-white px-2 py-1 rounded-full hover:bg-red-600"
                         >
                           Reject
                         </button>
