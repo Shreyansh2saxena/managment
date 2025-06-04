@@ -91,7 +91,7 @@ const Dashboard = () => {
           {!isMobile && isSidebarOpen && <Sidebar sidebarItems={sidebarItems} />}
           <div className="flex-1 p-6 overflow-y-auto">
             <Routes>
-              {/* Home Route */}
+              Home Route
               <Route path="/" element={<Home />} />
               
               {/* Employee Routes */}
