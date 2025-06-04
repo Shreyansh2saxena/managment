@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from './util/axiosInstance';
 
 const AddIssuedDoc = () => {
   const [formData, setFormData] = useState({
@@ -22,7 +22,7 @@ const AddIssuedDoc = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/api/employees/getall");
+        const response = await axiosInstance.get("/employees/getall");
         setEmployeeList(response.data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -73,8 +73,8 @@ const AddIssuedDoc = () => {
 
     try {
       // Validate if employee ID exists
-      const response = await axios.get(
-        `http://localhost:8081/api/employees/${formData.employeeId}`
+      const response = await axiosInstance.get(
+        `/employees/${formData.employeeId}`
       );
 
       if (!response.data) {
@@ -91,7 +91,7 @@ const AddIssuedDoc = () => {
       formDataObj.append("issuedBy", formData.issuedBy);
       formDataObj.append("file", formData.file);
 
-      await axios.post("http://localhost:8081/api/issued-docs", formDataObj, {
+      await axiosInstance.post("/issued-docs", formDataObj, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

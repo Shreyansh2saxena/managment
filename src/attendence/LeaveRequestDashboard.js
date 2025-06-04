@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 
 const LeaveRequestForm = () => {
@@ -42,7 +42,7 @@ const LeaveRequestForm = () => {
 
   const hrej = async (id) => {
     try {
-      const res = await axios.put(`http://localhost:8081/api/leaves/reject-leave/${id}?managerId=1`);
+      const res = await axiosInstance.put(`/leaves/reject-leave/${id}?managerId=1`);
       showMessage('Leave rejected successfully', 'success');
       ftable(); // Refresh leave table
     } catch (error) {
@@ -52,7 +52,7 @@ const LeaveRequestForm = () => {
   };
   const happ = async (id) => {
     try {
-      const res = await axios.put(`http://localhost:8081/api/leaves/approve-leave/${id}?managerId=1`);
+      const res = await axiosInstance.put(`/leaves/approve-leave/${id}?managerId=1`);
       showMessage('Leave approved successfully', 'success');
       ftable(); // Refresh leave table
     } catch (error) {
@@ -69,7 +69,7 @@ const LeaveRequestForm = () => {
   const fetchEmployeeData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8081/api/employees/${employeeId}`);
+      const response = await axiosInstance.get(`/employees/${employeeId}`);
       if (response.data) {
         setEmployeeName(response.data.employeeName || '');
         setEmployeeData(response.data);
@@ -103,7 +103,7 @@ const LeaveRequestForm = () => {
 
   const ftable = async ()=>{
     try {
-      const res = await axios.get('http://localhost:8081/api/leaves/all');
+      const res = await axiosInstance.get('/leaves/all');
       setLeavedata(res.data.content)
       console.log("Fetched Leave Data:", res.data);
     }
@@ -144,7 +144,7 @@ const LeaveRequestForm = () => {
         reason
       };
       
-      const response = await axios.post('http://localhost:8081/api/leaves/apply', leaveRequest);
+      const response = await axiosInstance.post('/leaves/apply', leaveRequest);
       showMessage('Leave request submitted successfully', 'success');
       
       // Reset form after successful submission

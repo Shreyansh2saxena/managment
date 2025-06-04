@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from './util/axiosInstance';
 
 const AddEmployee = () => {
   const [employee, setEmployee] = useState({
@@ -22,7 +22,7 @@ const AddEmployee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8081/api/employees", employee);
+      await axiosInstance.post("/employees", employee);
       alert("Employee added successfully!");
       setEmployee({
         employeeName: "",

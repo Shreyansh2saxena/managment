@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axiosInstance from '../util/axiosInstance';
 
 export default function MonthSummaryList() {
   const [formData, setFormData] = useState({ year: "", month: "" });
@@ -23,7 +23,7 @@ export default function MonthSummaryList() {
     }
 
     try {
-      const response = await axios.get("http://localhost:8081/api/month/summary/all", {
+      const response = await axiosInstance.get("http://localhost:8081/api/month/summary/all", {
         params: { year, month },
       });
       setSummaries(response.data);
