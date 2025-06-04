@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from './util/axiosInstance';
 
 const AddDocumentForm = () => {
   const [employeeName, setEmployeeName] = useState("");
@@ -15,7 +15,7 @@ const AddDocumentForm = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get("http://localhost:8081/api/employees/getall");
+        const response = await axiosInstance.get("/employees/getall");
        // console.log("Fetched Employees:", response.data);
         
         // Validate employee data structure
@@ -77,8 +77,8 @@ const AddDocumentForm = () => {
     formData.append("file", file);
 
     try {
-      await axios.post(
-        "http://localhost:8081/api/documents/upload",
+      await axiosInstance.post(
+        "/documents/upload",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 const OvertimeForm = () => {
   // Form state
@@ -43,7 +43,7 @@ const OvertimeForm = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axios.get(`http://localhost:8081/api/employees/${id}`);
+      const response = await axiosInstance.get(`/employees/${id}`);
       setEmployeeDetails(response.data);
     } catch (err) {
       setError('Employee not found. Please check the ID.');
@@ -55,7 +55,7 @@ const OvertimeForm = () => {
 
   const fetchOvertimeRecords = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/api/overtime/all?page=${page}&size=${size}`);
+      const response = await axiosInstance.get(`/overtime/all?page=${page}&size=${size}`);
       setOvertimeRecords(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch (err) {
@@ -70,7 +70,7 @@ const OvertimeForm = () => {
     setSuccess('');
 
     try {
-      const response = await axios.post('http://localhost:8081/api/overtime/add', null, {
+      const response = await axiosInstance.post('/overtime/add', null, {
         params: {
           employeeId,
           date,

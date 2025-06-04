@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from '../util/axiosInstance';
 import { TextField, Button, Container, Typography, Paper, Select, MenuItem, FormControl, InputLabel, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -24,14 +24,14 @@ const AuthPage = () => {
 
     try {
       if (isSignup) {
-        await axios.post("http://localhost:8080/employees/save", formData);
+        await axiosInstance.post("/employees/save", formData);
         alert("Signup successful!");
       } else {
-        const response = await axios.post(`http://localhost:8080/employees/login?email=${formData.email}&password=${formData.password}`);
+        const response = await axiosInstance.post(`/employees/login?email=${formData.email}&password=${formData.password}`);
         const userId = response.data;
 
         // Fetch employee details and store them in localStorage
-        const userResponse = await axios.get(`http://localhost:8080/employees/getbyemail/${formData.email}`);
+        const userResponse = await axiosInstance.get(`/employees/getbyemail/${formData.email}`);
         localStorage.setItem("user", JSON.stringify(userResponse.data));
 
         alert("Login successful!");

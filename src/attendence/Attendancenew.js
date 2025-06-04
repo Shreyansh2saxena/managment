@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 const AttendanceManagement = () => {
   // Employee data state
@@ -30,7 +30,7 @@ const AttendanceManagement = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8081/api/employees/${employeeId}`);
+      const response = await axiosInstance.get(`/employees/${employeeId}`);
       if (response.data) {
         setEmployeeName(response.data.employeeName || '');
         setEmployeeEmail(response.data.email || '');
@@ -74,8 +74,8 @@ const AttendanceManagement = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:8081/api/attendance/logs/${employeeId}/${selectedYear}/${selectedMonth}?page=${currentPage}&size=10`
+      const response = await axiosInstance.get(
+        `api/attendance/logs/${employeeId}/${selectedYear}/${selectedMonth}?page=${currentPage}&size=10`
       );
       setAttendanceRecords(response.data.content);
       setTotalPages(response.data.totalPages);
@@ -107,7 +107,7 @@ const AttendanceManagement = () => {
         return;
       }
   
-      const response = await axios.post(`http://localhost:8081/api/attendance/checkin/${employeeId}`);
+      const response = await axiosInstance.post(`/attendance/checkin/${employeeId}`);
       showMessage(response.data, 'success');
       fetchAttendanceRecords(); // Refresh records
       setLoading(false);
@@ -138,7 +138,7 @@ const AttendanceManagement = () => {
         return;
       }
   
-      const response = await axios.post(`http://localhost:8081/api/attendance/checkout/${employeeId}`);
+      const response = await axiosInstance.post(`/attendance/checkout/${employeeId}`);
       showMessage(response.data, 'success');
       fetchAttendanceRecords(); // Refresh records
       setLoading(false);

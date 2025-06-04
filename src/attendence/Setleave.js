@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 const Setleave = () => {
     const [employeeName, setEmployeeName] = useState("");
@@ -18,7 +18,7 @@ const Setleave = () => {
             return;
         }
         try {
-            const response = await axios.post(`http://localhost:8081/api/leaves/add?empId=${employeeId}&count=${leaveCount}`);
+            const response = await axiosInstance.post(`/leaves/add?empId=${employeeId}&count=${leaveCount}`);
             if (response.status === 200) {
                 alert("successful")
                 setEmployeeId("");
@@ -34,7 +34,7 @@ const Setleave = () => {
 
     const hfetch = async () => {
         try {
-            const res = await axios.get(`http://localhost:8081/api/leaves/details`);
+            const res = await axiosInstance.get(`/leaves/details`);
             setleavedata(res.data);
             setAllEmployees(res.data); // Store all employees for search suggestions
         }

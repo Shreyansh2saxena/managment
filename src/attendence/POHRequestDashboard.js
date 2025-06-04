@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from '../util/axiosInstance';
 
 const POHRequestForm = () => {
   const [employeeId, setEmployeeId] = useState('');
@@ -35,7 +35,7 @@ const POHRequestForm = () => {
       }
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:8081/api/employees/${employeeId}`);
+        const response = await axiosInstance.get(`/employees/${employeeId}`);
         setEmployeeData(response.data);
       } catch (error) {
         setEmployeeData(null);
@@ -51,7 +51,7 @@ const POHRequestForm = () => {
     try {
       setLoading(true);
       // Fetch a large batch of records to use for searching
-      const response = await axios.get(`http://localhost:8081/api/poh/all?page=0&size=1000`);
+      const response = await axiosInstance.get(`/poh/all?page=0&size=1000`);
       setAllPohRequests(response.data.content);
       
       // If not in search mode, set the current page data
@@ -71,7 +71,7 @@ const POHRequestForm = () => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:8081/api/poh/all?page=${currentPage}&size=10`);
+      const response = await axiosInstance.get(`/poh/all?page=${currentPage}&size=10`);
       setPohRequests(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch (error) {
@@ -120,7 +120,7 @@ const POHRequestForm = () => {
     }
     try {
       setLoading(true);
-      await axios.post('http://localhost:8081/api/poh/save', null, { params: { employeeId, date } });
+      await axiosInstance.post('/poh/save', null, { params: { employeeId, date } });
       setMessage('POH request submitted successfully');
       setDate('');
       
@@ -143,7 +143,7 @@ const POHRequestForm = () => {
   const handleApprove = async (id) => {
     try {
       setLoading(true);
-      await axios.put(`http://localhost:8081/api/poh/${id}/approve`);
+      await axiosInstance.put(`/poh/${id}/approve`);
       
       // Refresh data after approval
       fetchAllPOHRequests();
@@ -164,7 +164,7 @@ const POHRequestForm = () => {
   const handleReject = async (id) => {
     try {
       setLoading(true);
-      await axios.put(`http://localhost:8081/api/poh/${id}/reject`);
+      await axiosInstance.put(`/poh/${id}/reject`);
       
       // Refresh data after rejection
       fetchAllPOHRequests();
