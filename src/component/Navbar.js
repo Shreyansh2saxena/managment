@@ -78,13 +78,13 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
               >
                 Vendor
               </Link>
-              <Link 
+              {/* <Link 
                 to="/dashboard" 
                 onClick={() => onNavClick("Attendance")} 
                 className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 hover:text-blue-300 transition-all duration-200 transform hover:scale-105"
               >
                 Attendance
-              </Link>
+              </Link> */}
               <button
                 onClick={onLogout}
                 className="ml-4 px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
@@ -337,7 +337,7 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
                 </li>
 
                 {/* Attendance Menu */}
-                <li>
+                {/* <li>
                   <button 
                     className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-slate-700 transition-all duration-200 transform hover:scale-105" 
                     onClick={() => toggleSubMenu("Attendance")}
@@ -424,7 +424,7 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
                       </li>
                     </ul>
                   )}
-                </li>
+                </li> */}
 
                 {/* Logout */}
                 <li className="pt-4 border-t border-slate-600">
