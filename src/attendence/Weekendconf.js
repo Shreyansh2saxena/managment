@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
+import axiosInstance from '../util/axiosInstance';
 
 const WeekendSelector = () => {
   const daysOfWeek = [
@@ -18,7 +19,13 @@ const WeekendSelector = () => {
   const fetchWeekends = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8081/api/weekends');
+      const response = await axiosInstance.get('/weekends',{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setSelectedDays(data);
@@ -45,11 +52,13 @@ const WeekendSelector = () => {
   const saveWeekends = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8081/api/weekends', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      const response = await axiosInstance.post('/weekends',{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      },{
         body: JSON.stringify(selectedDays)
       });
       

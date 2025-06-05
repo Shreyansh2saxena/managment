@@ -23,7 +23,13 @@ const MarkAttendance = () => {
       try {
         if (employeeId === "unknown") throw new Error("Invalid employee ID");
         const date = new Date().toISOString().split("T")[0];
-        const response = await fetch(`http://localhost:8080/attendance/details/${employeeId}/${date}`);
+        const response = await axiosInstance.get(`/attendance/details/${employeeId}/${date}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         if (!response.ok) throw new Error("Failed to fetch attendance data");
         const data = await response.json();
         if (data?.checkInTime) {
@@ -57,9 +63,12 @@ const MarkAttendance = () => {
   const handlePunchIn = async () => {
     try {
       if (employeeId === "unknown") throw new Error("Invalid employee ID");
-      const response = await fetch(`http://localhost:8080/attendance/checkin/${employeeId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await axiosInstance.post(`/attendance/checkin/${employeeId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
       });
       if (!response.ok) throw new Error("Failed to punch in");
       alert("✅ Punched In Successfully");
@@ -73,9 +82,12 @@ const MarkAttendance = () => {
   const handlePunchOut = async () => {
     if (!isPunchedIn) return alert("⚠️ You must punch in first!");
     try {
-      const response = await fetch(`http://localhost:8080/attendance/checkout/${employeeId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await axiosInstance.post(`/attendance/checkout/${employeeId}`, {
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
       });
       if (!response.ok) throw new Error("Failed to punch out");
       alert("✅ Punched Out Successfully");

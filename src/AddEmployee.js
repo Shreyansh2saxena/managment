@@ -22,7 +22,12 @@ const AddEmployee = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axiosInstance.post("/employees", employee);
+      await axiosInstance.post("/employees", employee,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        }
+      });
       alert("Employee added successfully!");
       setEmployee({
         employeeName: "",

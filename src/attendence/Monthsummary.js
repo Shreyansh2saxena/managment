@@ -24,7 +24,11 @@ export default function MonthSummaryList() {
 
     try {
       const response = await axiosInstance.get("http://localhost:8081/api/month/summary/all", {
-        params: { year, month },
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        },
+        params: { year, month }
       });
       setSummaries(response.data);
     } catch (err) {

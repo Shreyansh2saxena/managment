@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "./util/axiosInstance";
 
 const GetDocumentsByEmployee = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,33 +11,43 @@ const GetDocumentsByEmployee = () => {
   const [matchedEmployees, setMatchedEmployees] = useState([]);
   const [matchedDocs, setMatchedDocs] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [page,setPage] = useState(0);
-    const [totPage , settotpage] = useState(1);
-    const [size] = useState(10);
+  const [page, setPage] = useState(0);
+  const [totPage, settotpage] = useState(1);
+  const [size] = useState(10);
 
-  
-    useEffect(() => {
-      const fetchAllData = async () => {
-        try {
-          const [docResponse, empResponse] = await Promise.all([
-            axios.get(`http://localhost:8081/api/documents?page=${page}&size=${size}`),
-            axios.get(`http://localhost:8081/api/employees?page=${page}&size=${size}`),
-          ]);
-          
-          
-          setAllDocuments(docResponse.data.content || []);
-          setFilteredDocuments(docResponse.data.content || []);
-          setEmployees(empResponse.data.content || []);
-          settotpage(docResponse.data.totalPages || 1);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          setMessage("Failed to load data.");
-        }
-      };
-      fetchAllData();
-    }, [page]);
-  
-    
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        const [docResponse, empResponse] = await Promise.all([
+          axiosInstance.get(`/documents?page=${page}&size=${size}`, {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+              "Content-Type": "application/json"
+            }
+          }),
+          axiosInstance.get(`/employees?page=${page}&size=${size}`, {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+              "Content-Type": "application/json"
+            }
+          })
+        ]);
+
+
+        setAllDocuments(docResponse.data.content || []);
+        setFilteredDocuments(docResponse.data.content || []);
+        setEmployees(empResponse.data.content || []);
+        settotpage(docResponse.data.totalPages || 1);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setMessage("Failed to load data.");
+      }
+    };
+    fetchAllData();
+  }, [page]);
+
+
   useEffect(() => {
     if (!searchTerm) {
       setMatchedEmployees([]);
@@ -190,55 +200,55 @@ const GetDocumentsByEmployee = () => {
               </tr>
             </thead>
             <tbody>
-  {filteredDocuments.map((doc) => {
-    // Find the corresponding employee data
-    const employee = employees.find(emp => emp.id === doc.employeeId);
+              {filteredDocuments.map((doc) => {
+                // Find the corresponding employee data
+                const employee = employees.find(emp => emp.id === doc.employeeId);
 
-    return (
-      <tr key={doc.id} className="hover:bg-gray-50">
-        <td className="border p-3">{doc.id}</td>
-        <td className="border p-3">{doc.employeeId}</td>
-        <td className="border p-3">{employee ? employee.employeeName : "N/A"}</td>
-        <td className="border p-3">{employee ? employee.role : "N/A"}</td>
-        <td className="border p-3">
-    <a
-      href={`http://localhost:8081/api/documents/view/${doc.id}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 hover:underline"
-    >
-      {doc.fileName}
-    </a>
-  </td>
-        <td className="border p-3">{doc.typeOfDoc || "N/A"}</td>
-        <td className="border p-3">{doc.createdDate}</td>
-      </tr>
-    );
-  })}
-</tbody>
+                return (
+                  <tr key={doc.id} className="hover:bg-gray-50">
+                    <td className="border p-3">{doc.id}</td>
+                    <td className="border p-3">{doc.employeeId}</td>
+                    <td className="border p-3">{employee ? employee.employeeName : "N/A"}</td>
+                    <td className="border p-3">{employee ? employee.role : "N/A"}</td>
+                    <td className="border p-3">
+                      <a
+                        href={`http://localhost:8081/api/documents/view/${doc.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        {doc.fileName}
+                      </a>
+                    </td>
+                    <td className="border p-3">{doc.typeOfDoc || "N/A"}</td>
+                    <td className="border p-3">{doc.createdDate}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
 
           </table>
         </div>
       )}
-        <div className="flex justify-between items-center my-4">
-  <button
-    onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-    disabled={page === 0}
-    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-  >
-    Previous
-  </button>
+      <div className="flex justify-between items-center my-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+          disabled={page === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
 
-  <span className="text-lg">Page {page + 1} of {totPage}</span>
+        <span className="text-lg">Page {page + 1} of {totPage}</span>
 
-  <button
-    onClick={() => setPage((prev) => (prev + 1 < totPage ? prev + 1 : prev))}
-    disabled={page + 1 >= totPage}
-    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-  >
-    Next
-  </button>
-</div>
+        <button
+          onClick={() => setPage((prev) => (prev + 1 < totPage ? prev + 1 : prev))}
+          disabled={page + 1 >= totPage}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };

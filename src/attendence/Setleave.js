@@ -18,7 +18,13 @@ const Setleave = () => {
             return;
         }
         try {
-            const response = await axiosInstance.post(`/leaves/add?empId=${employeeId}&count=${leaveCount}`);
+            const response = await axiosInstance.post(`/leaves/add?empId=${employeeId}&count=${leaveCount}`, {
+                headers: {
+                    Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+                    "Content-Type": "application/json"
+
+                }
+            });
             if (response.status === 200) {
                 alert("successful")
                 setEmployeeId("");
@@ -34,7 +40,13 @@ const Setleave = () => {
 
     const hfetch = async () => {
         try {
-            const res = await axiosInstance.get(`/leaves/details`);
+            const res = await axiosInstance.get(`/leaves/details`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
             setleavedata(res.data);
             setAllEmployees(res.data); // Store all employees for search suggestions
         }
@@ -52,10 +64,10 @@ const Setleave = () => {
             setleavedata(allEmployees);
             return;
         }
-        
+
         try {
             // Filter locally by name (case insensitive)
-            const filteredResults = allEmployees.filter(emp => 
+            const filteredResults = allEmployees.filter(emp =>
                 emp.employeeName.toLowerCase().includes(name.toLowerCase())
             );
             setleavedata(filteredResults);
@@ -76,12 +88,12 @@ const Setleave = () => {
     const handleSearchInputChange = (e) => {
         const input = e.target.value;
         setSearchName(input);
-        
+
         if (input.length > 0) {
-            const filteredSuggestions = allEmployees.filter(emp => 
+            const filteredSuggestions = allEmployees.filter(emp =>
                 emp.employeeName.toLowerCase().includes(input.toLowerCase())
             ).slice(0, 5); // Limit to 5 suggestions
-            
+
             setSuggestions(filteredSuggestions);
             setShowSuggestions(true);
         } else {
@@ -163,8 +175,8 @@ const Setleave = () => {
                                     {showSuggestions && suggestions.length > 0 && (
                                         <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
                                             {suggestions.map(emp => (
-                                                <div 
-                                                    key={emp.empId} 
+                                                <div
+                                                    key={emp.empId}
                                                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b"
                                                     onClick={() => selectSuggestion(emp)}
                                                 >

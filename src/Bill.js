@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { pdf } from '@react-pdf/renderer';
 import GSTInvoice from './GSTInvoice'; 
+import axiosInstance from "./util/axiosInstance";
 
 const initialBillState = {
   vendor: null,
@@ -47,7 +47,12 @@ const App = () => {
 
   const fetchBills = async (page) => {
     try {
-      const response = await axios.get(`http://localhost:8081/api/GSTbills?page=${currentPage}&size=${billPp}`);
+      const response = await axiosInstance.get(`/GSTbills?page=${currentPage}&size=${billPp}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        }
+      });
       
     
       const data = response.data;
@@ -69,7 +74,13 @@ const App = () => {
     }
 
     try {
-      const response = await axios.get(`http://localhost:8081/api/vendors/fetch`);
+      const response = await axiosInstance.get(`/vendors/fetch`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+
+        }
+      });
       const filtered = response.data
         .filter(vendor =>
           vendor.name.toLowerCase().includes(query.toLowerCase())
@@ -91,7 +102,13 @@ const App = () => {
     }
 
     try {
-      const response = await axios.get("http://localhost:8081/api/customers/fectch");
+      const response = await axiosInstance.get("/customers/fectch",{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       const filtered = response.data
         .filter(customer =>
           customer.name.toLowerCase().includes(query.toLowerCase())
@@ -113,8 +130,12 @@ const App = () => {
     }
     
     try {
-      const response = await axios.get(`http://localhost:8081/api/vendors/${vendor}/image`, {
-        responseType: "blob"
+      const response = await axiosInstance.get(`/vendors/${vendor}/image`, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        }
       });
       
       if (response.data.size === 0) {
@@ -246,7 +267,13 @@ const saveBill = async () => {
       })) || []
     };
 
-    await axios.post("http://localhost:8081/api/GSTbills/gst", billToSave);
+    await axiosInstance.post("/GSTbills/gst", billToSave,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
     fetchBills();
     
     // Reset the bill form to the initial state after saving
@@ -272,7 +299,13 @@ const saveBill = async () => {
   const deleteBill = async (id) => {
     if (window.confirm("Are you sure you want to delete this bill?")) {
       try {
-        await axios.delete(`http://localhost:8081/api/GSTbills/${id}`);
+        await axiosInstance.delete(`/GSTbills/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         fetchBills();
         alert("Bill deleted successfully!");
       } catch (error) {
@@ -288,7 +321,13 @@ const saveBill = async () => {
   const handleViewPDF = async (billId) => {
     try {
         // Fetch the complete bill data
-        const billResponse = await axios.get(`http://localhost:8081/api/GSTbills/bill/${billId}`);
+        const billResponse = await axiosInstance.get(`/GSTbills/bill/${billId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         const bill = billResponse.data;
 
         console.log("Received Bill Object:", bill);
@@ -395,14 +434,26 @@ const saveBill = async () => {
     if (window.confirm("Are you sure you want to mark this bill as PAID?")) {
       try {
         // Fetch the current bill details
-        const response = await axios.get(`http://localhost:8081/api/GSTbills/${id}`);
+        const response = await axiosInstance.get(`/api/GSTbills/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         const bill = response.data;
   
         // Update the bill status to PAID
         const updatedBill = { ...bill, paymentStatus: "PAID" };
   
         // Send the updated bill back to the server
-        await axios.put(`http://localhost:8081/api/GSTbills/${id}`, updatedBill);
+        await axiosInstance.put(`/GSTbills/${id}`, updatedBill,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
   
         alert("Bill marked as PAID successfully!");
         fetchBills();  // Refresh the list after the update

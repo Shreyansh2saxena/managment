@@ -11,14 +11,17 @@ const AddDocumentForm = () => {
   const [employeeList, setEmployeeList] = useState([]); // Store fetched employees
   const [filteredEmployees, setFilteredEmployees] = useState([]); // Suggestions
 
-  // Fetch all employees when the component mounts
+  
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axiosInstance.get("/employees/getall");
-       // console.log("Fetched Employees:", response.data);
-        
-        // Validate employee data structure
+        const response = await axiosInstance.get("/employees/getall",{
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
         const validEmployees = response.data.filter(
           emp => emp.employeeName && emp.id
         );
@@ -33,7 +36,7 @@ const AddDocumentForm = () => {
   }, []);
 ;
 
-  // Handle employee name input change
+  
   const handleEmployeeNameChange = (e) => {
     const input = e.target.value;
     setEmployeeName(input);
@@ -76,12 +79,17 @@ const AddDocumentForm = () => {
     formData.append("typeOfDoc", typeOfDoc);
     formData.append("file", file);
 
-    try {
-      await axiosInstance.post(
-        "/documents/upload",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+  try {
+    await axiosInstance.post(
+      "/documents/upload",
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "multipart/form-data"
+        }
+      }
+);
       setMessage("Document uploaded successfully.");
       setEmployeeName("");
       setEmployeeId("");

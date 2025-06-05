@@ -18,11 +18,18 @@ const AddIssuedDoc = () => {
   const [employeeList, setEmployeeList] = useState([]); // Store all employees
   const [filteredEmployees, setFilteredEmployees] = useState([]); // Filtered suggestions
 
-  // Fetch employees on component mount
+ 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axiosInstance.get("/employees/getall");
+        const response = await axiosInstance.get("/employees/getall",
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getitem('token')}`,
+              "Content-Type": "application/json"
+            }
+          }
+        );
         setEmployeeList(response.data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -72,9 +79,14 @@ const AddIssuedDoc = () => {
     setMessage("");
 
     try {
-      // Validate if employee ID exists
+     
       const response = await axiosInstance.get(
-        `/employees/${formData.employeeId}`
+        `/employees/${formData.employeeId}`,{
+          headers:{
+            Authorization:`Bearer ${sessionStorage.getitem("token")}`,
+            "Content-Type": "application/json"
+          }
+        }
       );
 
       if (!response.data) {
@@ -92,7 +104,9 @@ const AddIssuedDoc = () => {
       formDataObj.append("file", formData.file);
 
       await axiosInstance.post("/issued-docs", formDataObj, {
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { 
+          "Content-Type": "multipart/form-data",
+          Authorization:`Bearer ${sessionStorage.getitem('token')}` },
       });
 
       setMessage("Document added successfully!");

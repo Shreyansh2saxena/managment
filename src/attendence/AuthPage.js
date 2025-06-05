@@ -24,14 +24,32 @@ const AuthPage = () => {
 
     try {
       if (isSignup) {
-        await axiosInstance.post("/employees/save", formData);
+        await axiosInstance.post("/employees/save", formData,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         alert("Signup successful!");
       } else {
-        const response = await axiosInstance.post(`/employees/login?email=${formData.email}&password=${formData.password}`);
+        const response = await axiosInstance.post(`/employees/login?email=${formData.email}&password=${formData.password}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         const userId = response.data;
 
         // Fetch employee details and store them in localStorage
-        const userResponse = await axiosInstance.get(`/employees/getbyemail/${formData.email}`);
+        const userResponse = await axiosInstance.get(`/employees/getbyemail/${formData.email}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         localStorage.setItem("user", JSON.stringify(userResponse.data));
 
         alert("Login successful!");

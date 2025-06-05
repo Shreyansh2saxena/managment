@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axiosInstance from './util/axiosInstance';
 
 const EmployeeEmailForm = () => {
   const [employeeName, setEmployeeName] = useState('');
@@ -28,7 +28,7 @@ const EmployeeEmailForm = () => {
   
 
   const letterTypes = ['Joining', 'Increment', 'Termination'];
-  const API_BASE_URL = 'http://localhost:8081/api';
+ 
 
   useEffect(() => {
     if (selectedLetterType) {
@@ -39,7 +39,13 @@ const EmployeeEmailForm = () => {
   const fetchTemplatesByType = async (type) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/email/templatetype/${type}`);
+      const response = await axiosInstance.get(`$/email/templatetype/${type}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setTemplates(response.data);
       setLoading(false);
     } catch (err) {
@@ -77,7 +83,13 @@ const EmployeeEmailForm = () => {
 
   const fetchTemplateBody = async (templateName) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/email/template/${templateName}`);
+      const response = await axiosInstance.get(`/email/template/${templateName}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       if (response.data && response.data.body) {
         setTemplateBody(response.data.body);
       } else {
@@ -417,10 +429,12 @@ const EmployeeEmailForm = () => {
       };
 
 
-      await axios.post(`${API_BASE_URL}/email/send`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      await axiosInstance.post(`/email/send`, payload,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
       });
 
       setSuccess('Email sent successfully!');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axiosInstance from "./util/axiosInstance";
 
 const CustomerForm = () => {
   const [customer, setCustomer] = useState({
@@ -13,22 +14,33 @@ const CustomerForm = () => {
   const [customers, setCustomers] = useState([]);
   const [editId, setEditId] = useState(null);
   const [searchId, setSearchId] = useState("");
-   const [currentPage, setCurrentPage] = useState(0);
-    const cusPerPage = 10;
-    const [totalPages, setTotalPages] = useState(1);
-  
+  const [currentPage, setCurrentPage] = useState(0);
+  const cusPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+
 
   useEffect(() => {
     fetchCustomers();
   }, [currentPage]);
 
+
+
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/customers?page=${currentPage}&size=${cusPerPage}`);
-      
-  
-      const data = await response.json();
-      setCustomers(Array.isArray(data.content) ? data.content : []); // Extract customers from content array
+      const response = await axiosInstance.get(`/customers`, {
+        params: {
+          page: currentPage,
+          size: cusPerPage
+        },
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = response.data;
+
+      setCustomers(Array.isArray(data.content) ? data.content : []);
       setTotalPages(data.totalPages ?? 1);
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -36,41 +48,64 @@ const CustomerForm = () => {
       setTotalPages(1);
     }
   };
-  
+
+
   const handleChange = (e) => {
     setCustomer({ ...customer, [e.target.name]: e.target.value });
   };
 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const method = editId ? "PUT" : "POST";
       const url = editId
-        ? `http://localhost:8081/api/customers/${editId}`
-        : "http://localhost:8081/api/customers";
+        ? `/customers/${editId}`
+        : "/customers";
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(customer),
-      });
-
-      if (response.ok) {
-        alert(editId ? "Customer updated successfully!" : "Customer added successfully!");
-        setCustomer({ name: "", gstNumber: "", address: "", state: "", contactNumber: "", email: "" });
-        setEditId(null);
-        fetchCustomers();
+      if (editId) {
+        await axiosInstance.put(url, customer, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+          }
+        });
+        alert("Customer updated successfully!");
       } else {
-        alert("Failed to save customer");
+        await axiosInstance.post(url, customer, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+          }
+        });
+        alert("Customer added successfully!");
       }
+
+      setCustomer({
+        name: "",
+        gstNumber: "",
+        address: "",
+        state: "",
+        contactNumber: "",
+        email: ""
+      });
+      setEditId(null);
+      fetchCustomers();
     } catch (error) {
       console.error("Error saving customer:", error);
+      alert("Failed to save customer");
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`http://localhost:8081/api/customers/${id}`, { method: "DELETE" });
+      await axiosInstance.delete(`/customers/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       alert("Customer deleted successfully");
       fetchCustomers();
     } catch (error) {
@@ -85,17 +120,20 @@ const CustomerForm = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/customers/${searchId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCustomers([data]);
-      } else {
-        alert("Customer not found");
-      }
+      const response = await axiosInstance.get(`/customers/${searchId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+      setCustomers([response.data]);
     } catch (error) {
       console.error("Error searching customer:", error);
+      alert("Customer not found");
     }
   };
+
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded">
@@ -147,24 +185,24 @@ const CustomerForm = () => {
         </table>
       </div>
       <div className="flex justify-between items-center my-4">
-  <button
-    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-    disabled={currentPage === 0}
-    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-  >
-    Previous
-  </button>
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+          disabled={currentPage === 0}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
 
-  <span className="text-lg">Page {currentPage + 1} of {totalPages}</span>
+        <span className="text-lg">Page {currentPage + 1} of {totalPages}</span>
 
-  <button
-    onClick={() => setCurrentPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
-    disabled={currentPage + 1 >= totalPages}
-    className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-  >
-    Next
-  </button>
-</div>
+        <button
+          onClick={() => setCurrentPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+          disabled={currentPage + 1 >= totalPages}
+          className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
 
     </div>
   );

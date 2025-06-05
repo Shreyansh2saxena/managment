@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from './util/axiosInstance';
 import React, { useEffect, useState } from 'react';
 
 const EmailListPage = () => {
@@ -27,7 +27,13 @@ const EmailListPage = () => {
 
   const fetchEmails = async () => {
     try {
-      const response = await axios.get(`http://localhost:8081/api/email/mailrecordpage/getall?page=${page}&size=${size}`);
+      const response = await axiosInstance.get(`/email/mailrecordpage/getall?page=${page}&size=${size}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       const data = response.data;
          setEmails(data.content);
           setFilteredEmails(data.content);

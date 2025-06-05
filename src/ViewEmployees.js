@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import { Delete, ModeEdit } from "@mui/icons-material";
+import axiosInstance from "./util/axiosInstance";
 
 const ViewEmployee = () => {
   const [employees, setEmployees] = useState([]);
@@ -34,8 +34,14 @@ const ViewEmployee = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:8081/api/employees?page=${page}&size=${size}`
+      const response = await axiosInstance.get(
+        `/employees?page=${page}&size=${size}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`
+
+        }
+      }
       );
 
       const { content, totalPages } = response.data;
@@ -48,26 +54,32 @@ const ViewEmployee = () => {
 
   // Filter employees by name instead of ID
   const filteredEmployees = searchName
-    ? employees.filter((emp) => 
-        emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
+    ? employees.filter((emp) =>
+      emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
     : employees;
 
   // Filter suggestions based on input
   const suggestions = searchName
     ? employees.filter((emp) =>
-        emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
+      emp.employeeName.toLowerCase().includes(searchName.toLowerCase()))
     : [];
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       try {
-        await axios.delete(`http://localhost:8081/api/employees/${id}`);
+        await axiosInstance.delete(`/employees/${id}`, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+
+          }
+        });
         alert("Employee deleted successfully!");
-        
+
         // Refetch the current page to reflect the changes immediately
         fetchEmployees();
-        
-        
+
+
         if (filteredEmployees.length === 1 && page > 0) {
           setPage(page - 1);
         }
@@ -94,15 +106,16 @@ const ViewEmployee = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(
-        `http://localhost:8081/api/employees/${editEmployee.id}`,
+      await axiosInstance.put(
+        `/employees/${editEmployee.id}`,
         editEmployee,
         {
           headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+
+          }
+        });
       alert("Employee updated successfully!");
       setIsEditModalOpen(false);
       fetchEmployees();
@@ -171,10 +184,10 @@ const ViewEmployee = () => {
               onFocus={() => setShowSuggestions(true)}
               className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            
+
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div 
+              <div
                 ref={suggestionRef}
                 className="absolute z-10 bg-white w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto"
               >
@@ -191,7 +204,7 @@ const ViewEmployee = () => {
               </div>
             )}
           </div>
-          
+
           <div className="w-full md:w-1/2 flex flex-wrap space-x-2">
             {["role", "email", "phone", "address"].map((field) => (
               <label key={field} className="flex items-center space-x-1">
@@ -334,15 +347,15 @@ const ViewEmployee = () => {
                 </label>
 
                 <div className="flex justify-end space-x-2">
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => setIsEditModalOpen(false)} 
+                    onClick={() => setIsEditModalOpen(false)}
                     className="px-4 py-2 bg-gray-500 text-white rounded-lg"
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg"
                   >
                     Save
@@ -352,7 +365,7 @@ const ViewEmployee = () => {
             </div>
           </div>
         )}
-        
+
         {/* Pagination */}
         <div className="flex justify-between items-center my-4">
           <button

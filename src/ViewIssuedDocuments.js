@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Visibility, Delete } from "@mui/icons-material";
-import axios from "axios";
+
+import axiosInstance from "./util/axiosInstance";
 
 const ViewIssuedDocs = () => {
   const [docs, setDocs] = useState([]);
@@ -17,14 +18,22 @@ const ViewIssuedDocs = () => {
   // Fetch documents
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`http://localhost:8081/api/issued-docs/getall?page=${page}&size=${pageSize}`)
+    axiosInstance
+      .get(`/issued-docs/getall?page=${page}&size=${pageSize}`,
+        {
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      }
+      )
       .then((response) => {
         setDocs(response.data.content);
         setTotalPages(response.data.totalPages);
         setLoading(false);
         
-        // Create a unique list of employees from the fetched documents
+        
         const uniqueEmployees = Array.from(
           new Set(response.data.content.map(doc => JSON.stringify({
             id: doc.employeeId,
@@ -44,7 +53,13 @@ const ViewIssuedDocs = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       try {
-        await axios.delete(`http://localhost:8081/api/issued-docs/${id}`);
+        await axiosInstance.delete(`/issued-docs/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
         setDocs((prevDocs) => prevDocs.filter((doc) => doc.id !== id));
         alert("Document deleted successfully!");
       } catch (error) {
@@ -57,10 +72,14 @@ const ViewIssuedDocs = () => {
   // View Document using Blob
   const handleView = async (doc) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8081/api/issued-docs/view/${doc.id}`,
-        { responseType: "blob" }
-      );
+      const response = await axiosInstance.get(
+        `/issued-docs/view/${doc.id}`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        },
+        responseType: "blob"
+      });
       const fileBlob = new Blob([response.data], { type: "application/pdf" });
       const fileURL = window.URL.createObjectURL(fileBlob);
       window.open(fileURL, "_blank");

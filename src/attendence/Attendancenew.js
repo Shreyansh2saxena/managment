@@ -30,7 +30,13 @@ const AttendanceManagement = () => {
     
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/employees/${employeeId}`);
+      const response = await axiosInstance.get(`/employees/${employeeId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       if (response.data) {
         setEmployeeName(response.data.employeeName || '');
         setEmployeeEmail(response.data.email || '');
@@ -75,8 +81,13 @@ const AttendanceManagement = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `api/attendance/logs/${employeeId}/${selectedYear}/${selectedMonth}?page=${currentPage}&size=10`
-      );
+        `/attendance/logs/${employeeId}/${selectedYear}/${selectedMonth}?page=${currentPage}&size=10`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setAttendanceRecords(response.data.content);
       setTotalPages(response.data.totalPages);
       setLoading(false);
@@ -86,7 +97,7 @@ const AttendanceManagement = () => {
     }
   };
 
-  // Handle check-in
+
   const handleCheckIn = async () => {
     if (!employeeId) {
       showMessage('Please enter employee ID', 'error');
@@ -95,7 +106,6 @@ const AttendanceManagement = () => {
   
     try {
       setLoading(true);
-      // Check if employee already checked in today
       const today = new Date().toISOString().split('T')[0];
       const existingRecord = attendanceRecords.find(
         (record) => record.date === today && record.checkInTime
@@ -107,9 +117,19 @@ const AttendanceManagement = () => {
         return;
       }
   
-      const response = await axiosInstance.post(`/attendance/checkin/${employeeId}`);
+      const response = await axiosInstance.post(
+  `attendance/checkin/${employeeId}`,
+  {}, // body (empty if not sending data)
+  {
+    headers: {
+      Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+
       showMessage(response.data, 'success');
-      fetchAttendanceRecords(); // Refresh records
+      fetchAttendanceRecords(); 
       setLoading(false);
     } catch (error) {
       showMessage('Check-in failed', 'error');
@@ -138,7 +158,13 @@ const AttendanceManagement = () => {
         return;
       }
   
-      const response = await axiosInstance.post(`/attendance/checkout/${employeeId}`);
+      const response = await axiosInstance.post(`/attendance/checkout/${employeeId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       showMessage(response.data, 'success');
       fetchAttendanceRecords(); // Refresh records
       setLoading(false);

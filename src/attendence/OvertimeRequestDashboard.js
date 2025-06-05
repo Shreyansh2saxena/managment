@@ -43,7 +43,13 @@ const OvertimeForm = () => {
     setLoading(true);
     setError('');
     try {
-      const response = await axiosInstance.get(`/employees/${id}`);
+      const response = await axiosInstance.get(`/employees/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setEmployeeDetails(response.data);
     } catch (err) {
       setError('Employee not found. Please check the ID.');
@@ -55,7 +61,13 @@ const OvertimeForm = () => {
 
   const fetchOvertimeRecords = async () => {
     try {
-      const response = await axiosInstance.get(`/overtime/all?page=${page}&size=${size}`);
+      const response = await axiosInstance.get(`/overtime/all?page=${page}&size=${size}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setOvertimeRecords(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch (err) {
@@ -70,7 +82,13 @@ const OvertimeForm = () => {
     setSuccess('');
 
     try {
-      const response = await axiosInstance.post('/overtime/add', null, {
+      const response = await axiosInstance.post('/overtime/add', null,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      }, {
         params: {
           employeeId,
           date,

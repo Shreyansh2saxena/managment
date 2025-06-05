@@ -15,7 +15,7 @@ const POHRequestForm = () => {
   const [searchType, setSearchType] = useState('id'); // 'id' or 'name'
   const [isSearchMode, setIsSearchMode] = useState(false);
 
-  
+
   useEffect(() => {
     fetchAllPOHRequests();
   }, []);
@@ -35,7 +35,13 @@ const POHRequestForm = () => {
       }
       try {
         setLoading(true);
-        const response = await axiosInstance.get(`/employees/${employeeId}`);
+        const response = await axiosInstance.get(`/employees/${employeeId}`, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+
+          }
+        });
         setEmployeeData(response.data);
       } catch (error) {
         setEmployeeData(null);
@@ -51,9 +57,15 @@ const POHRequestForm = () => {
     try {
       setLoading(true);
       // Fetch a large batch of records to use for searching
-      const response = await axiosInstance.get(`/poh/all?page=0&size=1000`);
+      const response = await axiosInstance.get(`/poh/all?page=0&size=1000`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+
+        }
+      });
       setAllPohRequests(response.data.content);
-      
+
       // If not in search mode, set the current page data
       if (!isSearchMode) {
         setPohRequests(response.data.content.slice(0, 10));
@@ -68,10 +80,16 @@ const POHRequestForm = () => {
 
   const fetchPaginatedPOHRequests = async () => {
     if (isSearchMode) return; // Skip if in search mode
-    
+
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/poh/all?page=${currentPage}&size=10`);
+      const response = await axiosInstance.get(`/poh/all?page=${currentPage}&size=10`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+
+        }
+      });
       setPohRequests(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch (error) {
@@ -88,25 +106,25 @@ const POHRequestForm = () => {
       fetchPaginatedPOHRequests();
       return;
     }
-    
+
     setLoading(true);
     setIsSearchMode(true);
-    
+
     // Client-side filtering with allPohRequests
     let filteredResults;
-    
+
     if (searchType === 'id') {
-      filteredResults = allPohRequests.filter(req => 
+      filteredResults = allPohRequests.filter(req =>
         req.id && req.id.toString().includes(searchTerm.trim())
       );
     } else {
-      filteredResults = allPohRequests.filter(req => 
-        req.employee && 
-        req.employee.employeeName && 
+      filteredResults = allPohRequests.filter(req =>
+        req.employee &&
+        req.employee.employeeName &&
         req.employee.employeeName.toLowerCase().includes(searchTerm.trim().toLowerCase())
       );
     }
-    
+
     // Display all search results at once without pagination
     setPohRequests(filteredResults);
     setLoading(false);
@@ -120,13 +138,19 @@ const POHRequestForm = () => {
     }
     try {
       setLoading(true);
-      await axiosInstance.post('/poh/save', null, { params: { employeeId, date } });
+      await axiosInstance.post('/poh/save', null, {
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+        },
+        params: { employeeId, date }
+      });
       setMessage('POH request submitted successfully');
       setDate('');
-      
+
       // Refresh all data after submission
       fetchAllPOHRequests();
-      
+
       if (!isSearchMode) {
         fetchPaginatedPOHRequests();
       } else if (searchTerm) {
@@ -143,11 +167,17 @@ const POHRequestForm = () => {
   const handleApprove = async (id) => {
     try {
       setLoading(true);
-      await axiosInstance.put(`/poh/${id}/approve`);
-      
+      await axiosInstance.put(`/poh/${id}/approve`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+
       // Refresh data after approval
       fetchAllPOHRequests();
-      
+
       if (!isSearchMode) {
         fetchPaginatedPOHRequests();
       } else if (searchTerm) {
@@ -164,11 +194,17 @@ const POHRequestForm = () => {
   const handleReject = async (id) => {
     try {
       setLoading(true);
-      await axiosInstance.put(`/poh/${id}/reject`);
-      
+      await axiosInstance.put(`/poh/${id}/reject`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+
       // Refresh data after rejection
       fetchAllPOHRequests();
-      
+
       if (!isSearchMode) {
         fetchPaginatedPOHRequests();
       } else if (searchTerm) {
@@ -192,7 +228,7 @@ const POHRequestForm = () => {
     <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow">
       <h1 className="text-2xl font-bold mb-6">Present On Holiday (POH) Request Form</h1>
       {message && <div className={`mb-4 p-3 ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} border rounded`}>{message}</div>}
-      
+
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input type="number" className="p-2 border rounded" value={employeeId} onChange={(e) => setEmployeeId(e.target.value.trim())} placeholder="Employee ID *" required />
@@ -203,34 +239,34 @@ const POHRequestForm = () => {
         </div>
         <button type="submit" className="mt-6 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">{loading ? 'Submitting...' : 'Submit POH Request'}</button>
       </form>
-      
+
       <div className="mb-6">
         <h2 className="text-xl font-bold mb-4">POH Requests History</h2>
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <select 
-            className="p-2 border rounded" 
-            value={searchType} 
+          <select
+            className="p-2 border rounded"
+            value={searchType}
             onChange={(e) => setSearchType(e.target.value)}
           >
             <option value="id">Search by ID</option>
             <option value="name">Search by Name</option>
           </select>
-          <input 
-            type="text" 
-            className="p-2 border rounded flex-grow" 
+          <input
+            type="text"
+            className="p-2 border rounded flex-grow"
             placeholder={searchType === 'id' ? "Enter ID to search..." : "Enter name to search..."}
-            value={searchTerm} 
-            onChange={(e) => setSearchTerm(e.target.value)} 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button 
-            onClick={handleSearch} 
+          <button
+            onClick={handleSearch}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Search
           </button>
-          <button 
-            onClick={handleClearSearch} 
+          <button
+            onClick={handleClearSearch}
             className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
           >
             Clear
@@ -242,7 +278,7 @@ const POHRequestForm = () => {
           </p>
         )}
       </div>
-      
+
       {loading ? <p>Loading...</p> : pohRequests.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white border">
@@ -261,24 +297,23 @@ const POHRequestForm = () => {
                   <td className="px-4 py-2 border">{poh.id}</td>
                   <td className="px-4 py-2 border">{poh.employee?.employeeName || '-'}</td>
                   <td className="px-4 py-2 border">{poh.date}</td>
-                  <td className={`px-4 py-2 border font-medium ${
-                    poh.status === 'Approved' ? 'text-green-600' : 
-                    poh.status === 'Rejected' ? 'text-red-600' : 
-                    'text-yellow-600'
-                  }`}>
+                  <td className={`px-4 py-2 border font-medium ${poh.status === 'Approved' ? 'text-green-600' :
+                      poh.status === 'Rejected' ? 'text-red-600' :
+                        'text-yellow-600'
+                    }`}>
                     {poh.status}
                   </td>
                   <td className="px-4  py-2 border">
                     {poh.status === 'Pending' && (
                       <div className="flex space-x-6">
-                        <button 
-                          onClick={() => handleApprove(poh.id)} 
+                        <button
+                          onClick={() => handleApprove(poh.id)}
                           className="bg-green-500 text-white px-2 py-1 rounded-full hover:bg-green-600"
                         >
                           Approve
                         </button>
-                        <button 
-                          onClick={() => handleReject(poh.id)} 
+                        <button
+                          onClick={() => handleReject(poh.id)}
                           className="bg-red-500 text-white px-2 py-1 rounded-full hover:bg-red-600"
                         >
                           Reject
@@ -292,20 +327,20 @@ const POHRequestForm = () => {
           </table>
         </div>
       ) : <p>No POH requests found.</p>}
-      
+
       {!isSearchMode && totalPages > 0 && (
         <div className="flex justify-between mt-4">
-          <button 
-            onClick={() => setCurrentPage(currentPage - 1)} 
-            disabled={currentPage === 0} 
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 0}
             className={`px-3 py-1 rounded ${currentPage === 0 ? 'bg-gray-100 text-gray-400' : 'bg-gray-200 hover:bg-gray-300'}`}
           >
             Previous
           </button>
           <span>Page {currentPage + 1} of {totalPages}</span>
-          <button 
-            onClick={() => setCurrentPage(currentPage + 1)} 
-            disabled={currentPage === totalPages - 1} 
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
             className={`px-3 py-1 rounded ${currentPage === totalPages - 1 ? 'bg-gray-100 text-gray-400' : 'bg-gray-200 hover:bg-gray-300'}`}
           >
             Next

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axiosInstance from "./util/axiosInstance";
 
 const VendorForm = () => {
   const [vendor, setVendor] = useState({
@@ -27,20 +28,28 @@ const VendorForm = () => {
     fetchVendors();
   }, [currentPage]);
 
-  const fetchVendors = async () => {
-    try {
-        const response = await fetch(`http://localhost:8081/api/vendors?page=${currentPage}&size=${vendorsPerPage}`);
-        
-        const data = await response.json();
+ 
 
-        setVendors(Array.isArray(data.content) ? data.content : []); // Ensure vendors is always an array
-        setTotalPages(data.totalPages ?? 1); // Ensure totalPages has a default value
-    } catch (error) {
-        console.error("Error fetching vendors:", error);
-        setVendors([]); // Prevent undefined issues
-        setTotalPages(1); // Ensure UI doesn't break on error
-    }
+const fetchVendors = async () => {
+  try {
+    const response = await axiosInstance.get(`/vendors`, {
+      params: {
+        page: currentPage,
+        size: vendorsPerPage
+      }
+    });
+
+    const data = response.data;
+
+    setVendors(Array.isArray(data.content) ? data.content : []);
+    setTotalPages(data.totalPages ?? 1);
+  } catch (error) {
+    console.error("Error fetching vendors:", error);
+    setVendors([]);
+    setTotalPages(1);
+  }
 };
+
 
   
 
@@ -61,66 +70,83 @@ const VendorForm = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
 
-    const formData = new FormData();
-    Object.keys(vendor).forEach((key) => {
-      formData.append(key, vendor[key]);
-    });
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (image) {
-      formData.append("image", image);
-    }
+  const formData = new FormData();
+  Object.keys(vendor).forEach((key) => {
+    formData.append(key, vendor[key]);
+  });
 
-    try {
-      const method = editId ? "PUT" : "POST";
-      const url = editId
-        ? `http://localhost:8081/api/vendors/${editId}`
-        : "http://localhost:8081/api/vendors";
+  if (image) {
+    formData.append("image", image);
+  }
 
-      const response = await fetch(url, {
-        method,
-        body: formData,
+  try {
+    const url = editId
+      ? `/vendors/${editId}`
+      : "/vendors";
+
+    if (editId) {
+      await axiosInstance.put(url, formData, {
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
       });
-
-      if (response.ok) {
-        alert(editId ? "Vendor updated successfully!" : "Vendor added successfully!");
-        setVendor({
-          name: "",
-          gstNumber: "",
-          address: "",
-          state: "",
-          contactNumber: "",
-          email: "",
-          panNumber: "",
-          bankName: "",
-          accountNumber: "",
-          ifscCode: "",
-        });
-        setImage(null);
-        setPreview("");
-        setEditId(null);
-        fetchVendors();
-      } else {
-        alert("Failed to save vendor");
-      }
-    } catch (error) {
-      console.error("Error saving vendor:", error);
-      alert("Error saving vendor");
+      alert("Vendor updated successfully!");
+    } else {
+      await axiosInstance.post(url, formData,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+      alert("Vendor added successfully!");
     }
-  };
 
-  const handleDelete = async (id) => {
-    try {
-      await fetch(`http://localhost:8081/api/vendors/${id}`, { method: "DELETE" });
-      alert("Vendor deleted successfully");
-      fetchVendors();
-    } catch (error) {
-      console.error("Error deleting vendor:", error);
-      alert("Error deleting vendor");
-    }
-  };
+    setVendor({
+      name: "",
+      gstNumber: "",
+      address: "",
+      state: "",
+      contactNumber: "",
+      email: "",
+      panNumber: "",
+      bankName: "",
+      accountNumber: "",
+      ifscCode: "",
+    });
+    setImage(null);
+    setPreview("");
+    setEditId(null);
+    fetchVendors();
+  } catch (error) {
+    console.error("Error saving vendor:", error);
+    alert("Error saving vendor");
+  }
+};
+
+const handleDelete = async (id) => {
+  try {
+    await axiosInstance.delete(`/vendors/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+    alert("Vendor deleted successfully");
+    fetchVendors();
+  } catch (error) {
+    console.error("Error deleting vendor:", error);
+    alert("Error deleting vendor");
+  }
+};
+
 
   const handleEdit = (vendor) => {
     setVendor(vendor);
@@ -128,18 +154,20 @@ const VendorForm = () => {
   };
 
   const handleSearch = async () => {
-    try {
-      const response = await fetch(`http://localhost:8081/api/vendors/${searchId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setVendors([data]);
-      } else {
-        alert("Vendor not found");
-      }
-    } catch (error) {
-      console.error("Error searching vendor:", error);
-    }
-  };
+  try {
+    const response = await axiosInstance.get(`/vendors/${searchId}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
+    setVendors([response.data]);
+  } catch (error) {
+    console.error("Error searching vendor:", error);
+    alert("Vendor not found");
+  }
+};
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded">

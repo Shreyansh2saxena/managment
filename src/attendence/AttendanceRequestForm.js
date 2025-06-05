@@ -35,7 +35,13 @@ const AttendanceRequestPage = () => {
   const fetchEmployeeDetails = async (id) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/employees/${id}`);
+      const response = await axiosInstance.get(`/employees/${id}`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setEmployeeDetails(response.data);
     } catch (error) {
       console.error('Error fetching employee details:', error);
@@ -54,7 +60,13 @@ const AttendanceRequestPage = () => {
         url = `/attendance-requests/employee/${filterEmployeeId}?page=${page}&size=${size}`;
       }
 
-      const response = await axiosInstance.get(url);
+      const response = await axiosInstance.get(url,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       setAttendanceRequests(response.data.content);
       setTotalPages(response.data.totalPages);
     } catch (error) {
@@ -66,7 +78,13 @@ const AttendanceRequestPage = () => {
 
   const happ = async (id) => {
     try {
-      const res = await axiosInstance.put(`/attendance-requests/${id}/approve`);
+      const res = await axiosInstance.put(`/attendance-requests/${id}/approve`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       console.log("Approving request", id);
       fetchAttendanceRequests();
     }catch (error) { 
@@ -77,7 +95,13 @@ const AttendanceRequestPage = () => {
 
   const hrej = async(id)=>{
     try {
-      const res = await axiosInstance.put(`/attendance-requests/${id}/reject`);
+      const res = await axiosInstance.put(`/attendance-requests/${id}/reject`,{
+        headers:{
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json"
+          
+        }
+      });
       console.log("reject request", id);
       fetchAttendanceRequests();
     }catch (error) { 
@@ -101,14 +125,13 @@ const AttendanceRequestPage = () => {
       });
 
       await axiosInstance.post(
-        `/attendance-requests/create`,
-        null,
+        `/attendance-requests/create?employeeId=${employeeId}&date=${date}&requestedTime=${requestedTime}`,
+        {},
         {
-          params: {
-            employeeId,
-            date,
-            requestedTime,
-          },
+          headers: {
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+          }
         }
       );
 
