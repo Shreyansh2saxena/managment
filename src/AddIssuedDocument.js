@@ -83,7 +83,7 @@ const AddIssuedDoc = () => {
       const response = await axiosInstance.get(
         `/employees/${formData.employeeId}`,{
           headers:{
-            Authorization:`Bearer ${sessionStorage.getitem("token")}`,
+            Authorization:`Bearer ${sessionStorage.getItem("token")}`,
             "Content-Type": "application/json"
           }
         }
@@ -106,7 +106,7 @@ const AddIssuedDoc = () => {
       await axiosInstance.post("/issued-docs", formDataObj, {
         headers: { 
           "Content-Type": "multipart/form-data",
-          Authorization:`Bearer ${sessionStorage.getitem('token')}` },
+          Authorization:`Bearer ${sessionStorage.getItem('token')}` },
       });
 
       setMessage("Document added successfully!");
