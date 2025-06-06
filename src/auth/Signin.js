@@ -26,25 +26,30 @@ const Signin = () => {
 
     setLoading(true);
 
-    try {
-      const response = await axiosInstance.post('/auth/login', formData);
-      const { token } = response.data;
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const role = (payload.role || 'USER').replace('ROLE_', '');
-      const username = payload.sub;
+   try {
+  const response = await axiosInstance.post('/auth/login', formData);
+  const { token } = response.data;
+  const payload = JSON.parse(atob(token.split('.')[1]));
 
-      sessionStorage.setItem('token', token);
-      sessionStorage.setItem('user', username);
-      sessionStorage.setItem('role', role);
+  // Get first role from roles array and strip "ROLE_" prefix
+  const role = Array.isArray(payload.roles) && payload.roles.length > 0
+    ? payload.roles[0].replace('ROLE_', '')
+    : 'USER';
 
-      alert('✅ Login successful!');
-      window.location.href = '/dashboard';
-    } catch (err) {
-      console.error(err);
-      setErrors({ general: 'Invalid username or password' });
-    } finally {
-      setLoading(false);
-    }
+  const username = payload.sub;
+
+  sessionStorage.setItem('token', token);
+  sessionStorage.setItem('user', username);
+  sessionStorage.setItem('role', role);
+
+  alert('✅ Login successful!');
+  window.location.href = '/dashboard';
+} catch (err) {
+  console.error(err);
+  setErrors({ general: 'Invalid username or password' });
+} finally {
+  setLoading(false);
+}
   };
 
   return (
