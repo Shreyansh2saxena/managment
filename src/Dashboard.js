@@ -23,6 +23,7 @@ import Weekend from "./attendence/Weekendconf";
 import Mailtable from "./Mailtable";
 import Setleave from "./attendence/Setleave";
 
+
 const Dashboard = () => {
   const [sidebarItems, setSidebarItems] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -96,6 +97,7 @@ const Dashboard = () => {
           <Routes>
             {/* Home Route */}
             <Route path="/" element={<Home />} />
+            
 
             {/* Employee Routes */}
             <Route path="/employees/add" element={<AddEmployee />} />
@@ -118,6 +120,7 @@ const Dashboard = () => {
             <Route path="/customer" element={<Customer />} />
             <Route path="/bill" element={<Bill />} />
 
+           
             {/* Attendance Routes */}
             <Route path="/attendance/new" element={<Attendecenew />} />
             <Route path="/attendance/request" element={<AttendanceRequestForm />} />

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
-const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
+const Navbar = ({ isMobile, onNavClick, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   
@@ -34,7 +34,7 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
             </h1>
           </div>
 
-          {/* Desktop Navigation - Right Side (End) */}
+         
           {!isMobile && (
             <div className="flex items-center space-x-6">
               <Link 
@@ -78,6 +78,13 @@ const Navbar = ({ isMobile, toggleSidebar, onNavClick, onLogout }) => {
               >
                 Vendor
               </Link>
+              {/* <Link 
+                to="/signup" 
+                
+                className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-700 hover:text-blue-300 transition-all duration-200 transform hover:scale-105"
+              >
+                Signup
+              </Link> */}
               {/* <Link 
                 to="/dashboard" 
                 onClick={() => onNavClick("Attendance")} 

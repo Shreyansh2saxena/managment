@@ -25,7 +25,7 @@ const AddIssuedDoc = () => {
         const response = await axiosInstance.get("/employees/getall",
           {
             headers: {
-              Authorization: `Bearer ${sessionStorage.getitem('token')}`,
+              Authorization: `Bearer ${sessionStorage.getItem('token')}`,
               "Content-Type": "application/json"
             }
           }

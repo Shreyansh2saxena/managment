@@ -39,7 +39,7 @@ const EmployeeEmailForm = () => {
   const fetchTemplatesByType = async (type) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`$/email/templatetype/${type}`,{
+      const response = await axiosInstance.get(`/email/templatetype/${type}`,{
         headers:{
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           "Content-Type": "application/json"

@@ -33,11 +33,15 @@ const VendorForm = () => {
 const fetchVendors = async () => {
   try {
     const response = await axiosInstance.get(`/vendors`, {
-      params: {
-        page: currentPage,
-        size: vendorsPerPage
-      }
-    });
+  params: {
+    page: currentPage,
+    size: vendorsPerPage
+  },
+  headers: {
+    Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+    "Content-Type": "application/json"
+  }
+});
 
     const data = response.data;
 
