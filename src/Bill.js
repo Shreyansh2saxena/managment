@@ -39,32 +39,34 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState(0);
       const billPp = 10;
       const [totalPages, setTotalPages] = useState(1);
+      const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+  const [paymentStatus, setpaymentStatus] = useState('');
     
 
   useEffect(() => {
     fetchBills();
   }, [currentPage]);
 
-  const fetchBills = async (page) => {
-    try {
-      const response = await axiosInstance.get(`/GSTbills?page=${currentPage}&size=${billPp}`,{
-        headers:{
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          "Content-Type": "application/json"
-        }
-      });
-      
-    
-      const data = response.data;
-  
-      setBills(Array.isArray(data.content) ? data.content : []); 
-      setTotalPages(data.totalPages ?? 1);
-    } catch (error) {
-      console.error("Error fetching bills:", error);
-      setBills([]);
-      setTotalPages(1);
-    }
-  };
+ const fetchBills = async () => {
+  try {
+    const response = await axiosInstance.get(`/GSTbills?page=${currentPage}&size=${billPp}`, {
+      headers: {
+        Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const data = response.data;
+    setBills(Array.isArray(data.content) ? data.content : []);
+    setTotalPages(data.totalPages ?? 1);
+  } catch (error) {
+    console.error("Error fetching bills:", error);
+    setBills([]);
+    setTotalPages(1);
+  }
+};
+
   
 
   const fetchVendorSuggestions = async (query) => {
@@ -92,6 +94,24 @@ const App = () => {
       setVendorSuggestions(filtered);
     } catch (error) {
       console.error("Error fetching vendors:", error);
+    }
+  };
+
+  const searchbills = async () => {
+    try {
+      const res = await axiosInstance.get(`/GSTbills/search`, { params: {
+        month,
+        year,
+        paymentStatus,
+      },
+        headers: {
+           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json" 
+        }
+      });
+      setBills(res.data);
+    } catch (error) {
+      console.error("Error searching bills:", error);
     }
   };
 
@@ -629,6 +649,62 @@ const saveBill = async () => {
           </button>
         </div>
       </div>
+      <div className="flex space-x-4 mb-4">
+        
+  {/* Month filter */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+    <select
+      value={month}
+      onChange={(e) => setMonth(e.target.value)}
+      className="border p-2 rounded"
+    >
+      <option value="">All</option>
+      {[...Array(12)].map((_, index) => (
+        <option key={index + 1} value={index + 1}>
+          {new Date(0, index).toLocaleString('default', { month: 'long' })}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Year filter */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+    <input
+      type="number"
+      value={year}
+      onChange={(e) => setYear(e.target.value)}
+      placeholder="e.g. 2025"
+      className="border p-2 rounded"
+    />
+  </div>
+
+  {/* Payment Status filter */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+    <select
+      value={paymentStatus}
+      onChange={(e) => setpaymentStatus(e.target.value)}
+      className="border p-2 rounded"
+    >
+      <option value="">All</option>
+      <option value="PAID">PAID</option>
+      <option value="PENDING">PENDING</option>
+    </select>
+  </div>
+
+  {/* Search Button */}
+  <div className="flex items-end">
+    <button
+      onClick={searchbills}
+      className="bg-blue-500 text-white px-4 py-2 rounded"
+    >
+      Search
+    </button>
+  </div>
+</div>
+
 
       {/* Bill List Table */}
       <div className="bg-white shadow-md rounded-lg p-6">

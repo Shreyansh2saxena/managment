@@ -140,7 +140,10 @@ const CustomerForm = () => {
       <h2 className="text-xl font-bold mb-4">{editId ? "Edit Customer" : "Add Customer"}</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
         <input type="text" name="name" value={customer.name} onChange={handleChange} className="border p-2" placeholder="Customer Name" required />
-        <input type="text" name="gstNumber" value={customer.gstNumber} onChange={handleChange} className="border p-2" placeholder="GST Number" required />
+        <input type="text" name="gstNumber" value={customer.gstNumber} onChange={handleChange} className="border p-2" placeholder="GST Number" required
+  pattern="^[0-9A-Z]{15}$"
+  maxLength={15}
+  title="GST Number must be exactly 15 characters long and contain only uppercase letters and digits" />
         <input type="text" name="address" value={customer.address} onChange={handleChange} className="border p-2" placeholder="Address" required />
         <input type="text" name="state" value={customer.state} onChange={handleChange} className="border p-2" placeholder="State" required />
         <input type="text" name="contactNumber" value={customer.contactNumber} onChange={handleChange} className="border p-2" placeholder="Contact Number" required />

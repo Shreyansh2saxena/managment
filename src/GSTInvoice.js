@@ -232,7 +232,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
           </View>
           <View>
             <Text style={styles.title}>TAX INVOICE</Text>
-            <Text style={styles.invoiceNumber}>#{data.invoiceNumber}</Text>
+            <Text style={styles.invoiceNumber}> No{data.invoiceNumber}</Text>
           </View>
         </View>
 

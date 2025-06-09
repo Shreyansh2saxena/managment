@@ -28,34 +28,34 @@ const VendorForm = () => {
     fetchVendors();
   }, [currentPage]);
 
- 
-
-const fetchVendors = async () => {
-  try {
-    const response = await axiosInstance.get(`/vendors`, {
-  params: {
-    page: currentPage,
-    size: vendorsPerPage
-  },
-  headers: {
-    Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-    "Content-Type": "application/json"
-  }
-});
-
-    const data = response.data;
-
-    setVendors(Array.isArray(data.content) ? data.content : []);
-    setTotalPages(data.totalPages ?? 1);
-  } catch (error) {
-    console.error("Error fetching vendors:", error);
-    setVendors([]);
-    setTotalPages(1);
-  }
-};
 
 
-  
+  const fetchVendors = async () => {
+    try {
+      const response = await axiosInstance.get(`/vendors`, {
+        params: {
+          page: currentPage,
+          size: vendorsPerPage
+        },
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = response.data;
+
+      setVendors(Array.isArray(data.content) ? data.content : []);
+      setTotalPages(data.totalPages ?? 1);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      setVendors([]);
+      setTotalPages(1);
+    }
+  };
+
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,81 +75,81 @@ const fetchVendors = async () => {
   };
 
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const formData = new FormData();
-  Object.keys(vendor).forEach((key) => {
-    formData.append(key, vendor[key]);
-  });
+    const formData = new FormData();
+    Object.keys(vendor).forEach((key) => {
+      formData.append(key, vendor[key]);
+    });
 
-  if (image) {
-    formData.append("image", image);
-  }
-
-  try {
-    const url = editId
-      ? `/vendors/${editId}`
-      : "/vendors";
-
-    if (editId) {
-      await axiosInstance.put(url, formData, {
-        headers:{
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          "Content-Type": "application/json"
-          
-        }
-      });
-      alert("Vendor updated successfully!");
-    } else {
-      await axiosInstance.post(url, formData,{
-        headers:{
-          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          "Content-Type": "application/json"
-          
-        }
-      });
-      alert("Vendor added successfully!");
+    if (image) {
+      formData.append("image", image);
     }
 
-    setVendor({
-      name: "",
-      gstNumber: "",
-      address: "",
-      state: "",
-      contactNumber: "",
-      email: "",
-      panNumber: "",
-      bankName: "",
-      accountNumber: "",
-      ifscCode: "",
-    });
-    setImage(null);
-    setPreview("");
-    setEditId(null);
-    fetchVendors();
-  } catch (error) {
-    console.error("Error saving vendor:", error);
-    alert("Error saving vendor");
-  }
-};
+    try {
+      const url = editId
+        ? `/vendors/${editId}`
+        : "/vendors";
 
-const handleDelete = async (id) => {
-  try {
-    await axiosInstance.delete(`/vendors/${id}`,{
-        headers:{
+      if (editId) {
+        await axiosInstance.put(url, formData, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+
+          }
+        });
+        alert("Vendor updated successfully!");
+      } else {
+        await axiosInstance.post(url, formData, {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+            "Content-Type": "application/json"
+
+          }
+        });
+        alert("Vendor added successfully!");
+      }
+
+      setVendor({
+        name: "",
+        gstNumber: "",
+        address: "",
+        state: "",
+        contactNumber: "",
+        email: "",
+        panNumber: "",
+        bankName: "",
+        accountNumber: "",
+        ifscCode: "",
+      });
+      setImage(null);
+      setPreview("");
+      setEditId(null);
+      fetchVendors();
+    } catch (error) {
+      console.error("Error saving vendor:", error);
+      alert("Error saving vendor");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/vendors/${id}`, {
+        headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           "Content-Type": "application/json"
-          
+
         }
       });
-    alert("Vendor deleted successfully");
-    fetchVendors();
-  } catch (error) {
-    console.error("Error deleting vendor:", error);
-    alert("Error deleting vendor");
-  }
-};
+      alert("Vendor deleted successfully");
+      fetchVendors();
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+      alert("Error deleting vendor");
+    }
+  };
 
 
   const handleEdit = (vendor) => {
@@ -158,29 +158,40 @@ const handleDelete = async (id) => {
   };
 
   const handleSearch = async () => {
-  try {
-    const response = await axiosInstance.get(`/vendors/${searchId}`,{
-        headers:{
+    try {
+      const response = await axiosInstance.get(`/vendors/${searchId}`, {
+        headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           "Content-Type": "application/json"
-          
+
         }
       });
-    setVendors([response.data]);
-  } catch (error) {
-    console.error("Error searching vendor:", error);
-    alert("Vendor not found");
-  }
-};
+      setVendors([response.data]);
+    } catch (error) {
+      console.error("Error searching vendor:", error);
+      alert("Vendor not found");
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded">
       <h2 className="text-xl font-bold mb-4">{editId ? "Edit Vendor" : "Add Vendor"}</h2>
-      
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4" encType="multipart/form-data">
         <input type="text" name="name" value={vendor.name} onChange={handleChange} className="border p-2" placeholder="Vendor Name" required />
-        <input type="text" name="gstNumber" value={vendor.gstNumber} onChange={handleChange} className="border p-2" placeholder="GST Number" required />
+        <input
+          type="text"
+          name="gstNumber"
+          value={vendor.gstNumber}
+          onChange={handleChange}
+          className="border p-2"
+          placeholder="GST Number"
+          required
+  pattern="^[0-9A-Z]{15}$"
+  maxLength={15}
+  title="GST Number must be exactly 15 characters long and contain only uppercase letters and digits"
+        />
         <input type="text" name="address" value={vendor.address} onChange={handleChange} className="border p-2" placeholder="Address" required />
         <input type="text" name="state" value={vendor.state} onChange={handleChange} className="border p-2" placeholder="State" required />
         <input type="text" name="contactNumber" value={vendor.contactNumber} onChange={handleChange} className="border p-2" placeholder="Contact Number" required />
