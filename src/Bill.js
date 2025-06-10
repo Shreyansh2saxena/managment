@@ -97,23 +97,28 @@ const App = () => {
     }
   };
 
-  const searchbills = async () => {
-    try {
-      const res = await axiosInstance.get(`/GSTbills/search`, { params: {
+ const searchbills = async () => {
+  try {
+    const res = await axiosInstance.post(
+      `/bills/filter`, // Updated endpoint (relative to your base URL)
+      {
         month,
         year,
         paymentStatus,
       },
+      {
         headers: {
-           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          "Content-Type": "application/json" 
-        }
-      });
-      setBills(res.data);
-    } catch (error) {
-      console.error("Error searching bills:", error);
-    }
-  };
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    setBills(res.data);
+  } catch (error) {
+    console.error("Error searching bills:", error);
+  }
+};
+
 
   const fetchCustomerSuggestions = async (query) => {
     if (query.trim() === "") {

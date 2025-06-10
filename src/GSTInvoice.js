@@ -250,7 +250,7 @@ const GSTInvoice = ({ invoice, vendorLogo }) => {
           {/* Invoice Details */}
           <View style={styles.detailsColumn}>
             <View style={styles.detailRow}>
-              <Text style={[styles.label, { width: 100 }]}>Invoice#</Text>
+              <Text style={[styles.label, { width: 100 }]}>Invoice Number</Text>
               <Text>{data.invoiceNumber}</Text>
             </View>
             <View style={styles.detailRow}>
