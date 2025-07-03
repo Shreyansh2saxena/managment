@@ -2,13 +2,13 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
-const getAuthToken = () => localStorage.getItem("authToken");
+const getAuthToken = () => sessionStorage.getItem("authToken");
 const removeAuthToken = () => {
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("username");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("role");
-  localStorage.removeItem("name");
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("username");
+  sessionStorage.removeItem("userId");
+  sessionStorage.removeItem("role");
+  sessionStorage.removeItem("name");
 };
 
 const isTokenExpired = (token) => {
