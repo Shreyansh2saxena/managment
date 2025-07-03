@@ -706,7 +706,7 @@ const saveBill = async () => {
 </div>
 
 
-      {/* Bill List Table */}
+      Bill List Table
       <div className="bg-white shadow-md rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4">Bills List</h2>
         <div className="overflow-x-auto">
